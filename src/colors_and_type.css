@@ -1,0 +1,145 @@
+/* ============================================================================
+   ALMOX PROENSA — Design Tokens
+   Sistema de Almoxarifado e Controle de Estoque · DTCEA-SM
+   Tema CLARO por padrão (operacional/ERP) + tema ESCURO via [data-theme="dark"].
+   Identidade: azul #006BB5 · dourado #FFC906 · vermelho #ED1C24
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ===== Tipografia (compartilhado entre temas) ======================== */
+  /* Source Sans 3 — humanista, comum e muito legível (ERP/operacional).
+     Números usam a mesma família com dígitos tabulares (sem cara de terminal). */
+  --font-sans: 'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: var(--font-sans);
+
+  --text-display: 34px; --text-h1: 26px; --text-h2: 20px; --text-h3: 16px;
+  --text-body: 14px; --text-sm: 13px; --text-xs: 12px; --text-2xs: 11px;
+  --lh-tight: 1.12; --lh-snug: 1.32; --lh-normal: 1.55;
+  --tracking-tight: -0.02em; --tracking-snug: -0.01em; --tracking-wide: 0.06em; --tracking-caps: 0.10em;
+
+  /* ===== Raios ========================================================= */
+  --r-xs: 6px; --r-sm: 8px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px; --r-pill: 999px;
+
+  /* ===== Espaçamento (4pt) ============================================= */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+  --sp-6: 24px; --sp-7: 32px; --sp-8: 40px; --sp-9: 48px; --sp-10: 64px;
+
+  /* ===== Movimento ===================================================== */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms; --dur-base: 180ms; --dur-slow: 320ms;
+
+  --sidebar-w: 250px; --sidebar-w-collapsed: 74px; --topbar-h: 62px;
+
+  /* ===== Marca: azul — fills sólidos (constantes nos 2 temas) ========== */
+  --brand-500: #2C8FE0; --brand-600: #1B7FD1; --brand-700: #006BB5;
+  --brand-800: #00528C; --brand-900: #073A5E;
+  /* dourado sólido (botão/realce de marca) — constante */
+  --gold-bg: #FFC906; --gold-bg-hover: #FFD23D;
+
+  /* ======================================================================
+     TEMA CLARO (padrão)
+     ====================================================================== */
+  --bg-0: #EEF2F7;     /* canvas do app */
+  --bg-1: #FFFFFF;     /* sidebar / topbar */
+  --bg-2: #FFFFFF;     /* cards */
+  --bg-3: #F1F5FA;     /* hover sutil */
+  --bg-4: #E5EBF3;     /* ativo / track / input ativo */
+  --bg-inset: #F5F8FC; /* cabeçalho de tabela / poços */
+
+  --line-1: rgba(17, 33, 58, 0.09);
+  --line-2: rgba(17, 33, 58, 0.13);
+  --line-3: rgba(17, 33, 58, 0.20);
+
+  --fg-1: #14223A;     /* texto primário */
+  --fg-2: #45566E;     /* secundário */
+  --fg-3: #6A788C;     /* terciário / placeholder */
+  --fg-4: #98A5B5;     /* faint / disabled */
+
+  /* azul — foreground (texto/ícone/realce) */
+  --brand-200: #073A5E; --brand-300: #00528C; --brand-400: #0E6FB6;
+  --brand-tint: rgba(0, 107, 181, 0.08);
+  --brand-tint-strong: rgba(0, 107, 181, 0.15);
+  --brand-glow: rgba(27, 127, 209, 0.22);
+
+  /* dourado — foreground */
+  --gold-300: #C89A12; --gold-400: #B5891A; --gold-500: #9A7400; --gold-600: #836300;
+  --gold-tint: rgba(213, 160, 12, 0.15);
+
+  /* semânticos (status) — foreground legível sobre claro */
+  --ok-500: #0E9E6E;  --ok-400: #14B07C;  --ok-tint: rgba(14, 158, 110, 0.12);
+  --warn-500: #9A7400; --warn-400: #B5891A; --warn-tint: rgba(213, 160, 12, 0.16);
+  --crit-500: #DD5A18; --crit-400: #C44E13; --crit-tint: rgba(221, 90, 24, 0.12);
+  --danger-500: #D11A22; --danger-400: #C5151D; --danger-tint: rgba(209, 26, 34, 0.10);
+  --info-500: var(--brand-600); --info-tint: var(--brand-tint);
+
+  /* sombras (claras e suaves) */
+  --shadow-sm: 0 1px 2px rgba(16,24,40,0.06), 0 1px 1px rgba(16,24,40,0.04);
+  --shadow-md: 0 8px 24px -10px rgba(16,24,40,0.18);
+  --shadow-lg: 0 22px 50px -18px rgba(16,24,40,0.26);
+  --shadow-pop: 0 14px 36px -10px rgba(16,24,40,0.24), 0 0 0 1px var(--line-2);
+  --ring-focus: 0 0 0 3px var(--brand-glow);
+  --inner-hairline: inset 0 1px 0 rgba(255,255,255,0.55);
+
+  /* efeitos dependentes de tema */
+  --shimmer: rgba(17,33,58,0.06);
+  --scrim: rgba(17,33,58,0.32);
+  --glow-1: rgba(44,143,224,0.06);
+  --glow-2: rgba(255,201,6,0.05);
+  --on-brand: #FFFFFF;   /* texto sobre botão azul */
+  --on-gold: #2A2103;    /* texto sobre botão dourado */
+}
+
+/* ======================================================================
+   TEMA ESCURO
+   ====================================================================== */
+[data-theme="dark"] {
+  --bg-0: #090B0F; --bg-1: #0C0F14; --bg-2: #11151C; --bg-3: #161C25;
+  --bg-4: #1D2530; --bg-inset: #0A0D11;
+
+  --line-1: rgba(255,255,255,0.07);
+  --line-2: rgba(255,255,255,0.11);
+  --line-3: rgba(255,255,255,0.16);
+
+  --fg-1: #F3F6FA; --fg-2: #A8B2BF; --fg-3: #6C7682; --fg-4: #495159;
+
+  --brand-200: #A9D5F6; --brand-300: #7CC0F2; --brand-400: #4FA6EC;
+  --brand-tint: rgba(44,143,224,0.12);
+  --brand-tint-strong: rgba(44,143,224,0.18);
+  --brand-glow: rgba(44,143,224,0.35);
+
+  --gold-300: #FFDE6B; --gold-400: #FFD23D; --gold-500: #FFC906; --gold-600: #E0AC00;
+  --gold-tint: rgba(255,201,6,0.13);
+
+  --ok-500: #21C08A;  --ok-400: #3DD6A0;  --ok-tint: rgba(33,192,138,0.13);
+  --warn-500: #FFC906; --warn-400: #FFD23D; --warn-tint: rgba(255,201,6,0.13);
+  --crit-500: #FF7A33; --crit-400: #FF9457; --crit-tint: rgba(255,122,51,0.13);
+  --danger-500: #ED1C24; --danger-400: #FF4750; --danger-tint: rgba(237,28,36,0.13);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 6px 20px -8px rgba(0,0,0,0.55);
+  --shadow-lg: 0 18px 48px -16px rgba(0,0,0,0.7);
+  --shadow-pop: 0 12px 36px -10px rgba(0,0,0,0.75), 0 0 0 1px var(--line-2);
+  --inner-hairline: inset 0 1px 0 rgba(255,255,255,0.05);
+
+  --shimmer: rgba(255,255,255,0.045);
+  --scrim: rgba(5,7,10,0.62);
+  --glow-1: rgba(44,143,224,0.10);
+  --glow-2: rgba(255,201,6,0.045);
+}
+
+/* ============================================================================
+   Estilos semânticos base
+   ============================================================================ */
+.t-display { font: 800 var(--text-display)/var(--lh-tight) var(--font-sans); letter-spacing: var(--tracking-tight); color: var(--fg-1); }
+.t-h1 { font: 700 var(--text-h1)/var(--lh-tight) var(--font-sans); letter-spacing: var(--tracking-tight); color: var(--fg-1); }
+.t-h2 { font: 700 var(--text-h2)/var(--lh-snug) var(--font-sans); letter-spacing: var(--tracking-snug); color: var(--fg-1); }
+.t-h3 { font: 600 var(--text-h3)/var(--lh-snug) var(--font-sans); letter-spacing: var(--tracking-snug); color: var(--fg-1); }
+.t-body { font: 400 var(--text-body)/var(--lh-normal) var(--font-sans); color: var(--fg-2); }
+.t-label { font: 600 var(--text-sm)/1.2 var(--font-sans); letter-spacing: var(--tracking-snug); color: var(--fg-1); }
+.t-meta { font: 500 var(--text-xs)/1.3 var(--font-sans); color: var(--fg-3); }
+.t-eyebrow { font: 600 var(--text-2xs)/1 var(--font-sans); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--fg-3); }
+.t-num { font: 600 var(--text-body)/1 var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; color: var(--fg-1); }
+.t-metric { font: 700 var(--text-display)/1 var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; color: var(--fg-1); }

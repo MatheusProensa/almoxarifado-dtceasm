@@ -1,0 +1,57 @@
+@import "./colors_and_type.css";
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg-0);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+#root { height: 100vh; }
+::selection { background: var(--brand-tint-strong); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--line-3); background-clip: content-box; }
+
+.app-shell::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(900px 500px at 18% -8%, var(--glow-1), transparent 60%),
+    radial-gradient(700px 420px at 100% 0%, var(--glow-2), transparent 55%);
+}
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+@keyframes fadeUp { from { transform: translateY(9px); } to { transform: none; } }
+@keyframes fadeIn { from { opacity: 0.001; } to { opacity: 1; } }
+@keyframes popIn { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.view-enter { animation: fadeUp var(--dur-slow) var(--ease-out) both; }
+
+.skeleton { position: relative; overflow: hidden; background: var(--bg-3); border-radius: var(--r-sm); }
+.skeleton::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--shimmer), transparent);
+  animation: shimmer 1.3s infinite;
+}
+.rowh { transition: background var(--dur-fast); }
+.rowh:hover { background: var(--bg-3); }
+
+.app-shell main, .app-shell header, .app-shell aside { zoom: 1.09; }
+
+/* Relatório para impressão (portal no body) */
+#print-report { position: fixed; left: -10000px; top: 0; width: 794px; }
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  #root { display: none !important; }
+  #print-report { position: static !important; left: auto !important; top: auto !important; width: 100% !important; }
+  #print-report table { page-break-inside: auto; }
+  #print-report tr { page-break-inside: avoid; }
+  #print-report thead { display: table-header-group; }
+}
