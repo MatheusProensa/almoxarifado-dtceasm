@@ -464,7 +464,7 @@ function ReportSheet({ materiais, movP, perLabel, entradasP, saidasP, ajustesP, 
         </div>
         <div style={{ marginTop: 12 }}>
           <div style={{ font: "800 15px/1.2 var(--font-sans)", color: brand, letterSpacing: "0.03em" }}>RELATÓRIO DE MOVIMENTO DE ESTOQUE</div>
-          <div style={{ font: "500 10px/1.4 var(--font-sans)", color: mut, marginTop: 6 }}>Período: {perLabel} · Gerado em 31/05/2026</div>
+          <div style={{ font: "500 10px/1.4 var(--font-sans)", color: mut, marginTop: 6 }}>Período: {perLabel} · Gerado em {new Date().toLocaleDateString("pt-BR")}</div>
           {filterDesc && <div style={{ font: "600 9.5px/1.4 var(--font-sans)", color: brand, marginTop: 5 }}>Filtros aplicados — {filterDesc}</div>}
         </div>
       </div>
