@@ -122,6 +122,7 @@ function Shell() {
         window.UNIDADES = cfg.unidades;
         window.PROFILE = cfg.perfil;
         window.RESPONSAVEIS = cfg.responsaveis;
+        window.SETORES = cfg.setores || window.SETORES;
         setCarregando(false);
       })
       .catch(() => {
@@ -136,6 +137,7 @@ function Shell() {
     window.UNIDADES = novoConfig.unidades;
     window.PROFILE = novoConfig.perfil;
     window.RESPONSAVEIS = novoConfig.responsaveis;
+    if (novoConfig.setores) window.SETORES = novoConfig.setores;
     api.putConfig(novoConfig).catch(() => {});
   }, []);
 
