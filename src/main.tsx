@@ -20,5 +20,8 @@ import "./components/AppRoot.jsx";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 
+declare const __APP_VERSION__: string;
+(window as any).__APP_VERSION__ = __APP_VERSION__;
+
 const R = (window as any).React;
 createRoot(document.getElementById("root") as HTMLElement).render(R.createElement(App));

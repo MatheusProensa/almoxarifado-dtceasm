@@ -1,9 +1,12 @@
 import { defineConfig } from "vite";
+import { readFileSync } from "fs";
 
-// Os componentes (.jsx) foram escritos no padrão clássico (React.createElement)
-// e usam React global. O jsxInject injeta `const React = window.React` em cada
-// arquivo JSX, e reactGlobal.tsx define window.React antes do carregamento.
+const pkg = JSON.parse(readFileSync("./package.json", "utf8"));
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   esbuild: {
     jsxInject: `const React = (window).React`,
   },
