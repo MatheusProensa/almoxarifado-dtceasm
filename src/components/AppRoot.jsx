@@ -100,6 +100,7 @@ function Shell() {
   const [editMat, setEditMat] = React.useState(null);
   const [profileOpen, setProfileOpen] = React.useState(false);
   const openEdit = (m) => { setEditMat(m); setModal("edit"); };
+  const [bulkIds, setBulkIds] = React.useState([]);
   const [materiais, setMateriais] = React.useState([]);
   const [movs, setMovs] = React.useState([]);
   const [config, setConfig] = React.useState(null);
@@ -225,6 +226,22 @@ function Shell() {
       .catch(() => toast({ title: "Erro ao ajustar", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
   };
 
+  const submitBulkOut = ({ items, qtds, resp, dest }) => {
+    const itensValidos = items.filter(m => parseInt(qtds[m.id] || 0) > 0);
+    if (itensValidos.length === 0) return;
+    Promise.all(itensValidos.map(m =>
+      api.postMovimentacao({ tipo: "out", sku: m.sku, qty: parseInt(qtds[m.id]), resp, dest })
+    )).then(resultados => {
+      resultados.forEach(({ material }) => {
+        setMateriais(prev => prev.map(m => m.sku === material.sku ? material : m));
+      });
+      api.getMovimentacoes().then(setMovs);
+      toast({ title: "Saídas registradas", desc: `${itensValidos.length} material(is) retirado(s)`, tone: "info" });
+      setModal(null);
+      setBulkIds([]);
+    }).catch(() => toast({ title: "Erro ao registrar", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
+  };
+
   if (erroConexao) return <ErroConexao />;
 
   if (carregando) return (
@@ -247,7 +264,7 @@ function Shell() {
         <main ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 26px 44px" }}>
           <div style={{ maxWidth: 1340, margin: "0 auto" }}>
             {view === "dashboard" && <Dashboard materiais={materiais} alertas={alertas} movs={movs} openModal={openModal} setView={setView} toast={toast} />}
-            {view === "materiais" && <Materiais materiais={materiais} loading={loadingMat} initialQ={matInitialQ} onNew={() => openModal("new")} openModal={openModal} onEdit={openEdit} onDelete={deleteMaterial} toast={toast} />}
+            {view === "materiais" && <Materiais materiais={materiais} loading={loadingMat} initialQ={matInitialQ} onNew={() => openModal("new")} openModal={openModal} onEdit={openEdit} onDelete={deleteMaterial} toast={toast} onBulkOut={ids => { setBulkIds(ids); setModal("bulk"); }} />}
             {view === "entradas" && <MovementScreen tipo="in" materiais={materiais} onSubmit={submitMovement} onAdjust={submitUpdateQty} />}
             {view === "saidas" && <MovementScreen tipo="out" materiais={materiais} onSubmit={submitMovement} onAdjust={submitUpdateQty} />}
             {(view === "movimentacao" || view === "historico") && <Historico movs={movs} initialTab={histFilter} />}
@@ -267,6 +284,7 @@ function Shell() {
       <EditMaterialModal open={modal === "edit"} material={editMat} onClose={() => setModal(null)} onSubmit={submitEditMaterial} />
       <EditProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} config={config} onSaved={(novoPerfil) => { if (config) updateConfig({ ...config, perfil: novoPerfil }); }} />
       <UpdateQtyModal open={modal === "adj"} materiais={materiais} initialSku={preset} onClose={() => setModal(null)} onSubmit={submitUpdateQty} />
+      <BulkOutModal open={modal === "bulk"} materiais={materiais} ids={bulkIds} onClose={() => { setModal(null); setBulkIds([]); }} onSubmit={submitBulkOut} />
     </div>
   );
 }

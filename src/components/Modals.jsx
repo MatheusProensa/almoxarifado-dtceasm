@@ -328,6 +328,54 @@ function UpdateQtyModal({ open, materiais, onClose, onSubmit, initialSku = "" })
   );
 }
 
+/* ---- Saída em lote ------------------------------------------------------- */
+function BulkOutModal({ open, materiais, ids, onClose, onSubmit }) {
+  const items = materiais.filter(m => ids.includes(m.id));
+  const [qtds, setQtds] = React.useState({});
+  const [resp, setResp] = React.useState("");
+  const [dest, setDest] = React.useState("");
+  React.useEffect(() => { if (open) { setQtds({}); setResp(""); setDest(""); } }, [open]);
+  const set = (id, v) => setQtds(p => ({ ...p, [id]: v }));
+  const temQtd = items.some(m => parseInt(qtds[m.id] || 0) > 0);
+  const semSaldo = items.some(m => { const n = parseInt(qtds[m.id] || 0); return n > 0 && n > m.qty; });
+  const ready = temQtd && resp && dest && !semSaldo;
+  return (
+    <Modal open={open} onClose={onClose} icon="ArrowUpFromLine" iconColor="#F59E0B" width={560}
+      title="Saída em lote" subtitle={`${items.length} material(is) selecionado(s)`}
+      footer={<>
+        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button variant="gold" icon="ArrowUpFromLine" disabled={!ready} onClick={() => onSubmit({ items, qtds, resp, dest })}>Confirmar saídas</Button>
+      </>}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+        <MField label="Militar (quem retirou)" required><MText value={resp} onChange={setResp} placeholder="Nome do militar" /></MField>
+        <MField label="Destino / setor" required>
+          <MSelect value={dest} placeholder="Selecione o setor" onChange={setDest} options={SETORES.map(s => ({ value: s, label: s }))} />
+        </MField>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {items.map(m => {
+          const n = parseInt(qtds[m.id] || 0);
+          const excede = n > m.qty;
+          return (
+            <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 13px", background: excede ? "var(--danger-tint)" : "var(--bg-inset)", border: `1px solid ${excede ? "color-mix(in srgb, var(--danger-500) 30%, transparent)" : "var(--line-1)"}`, borderRadius: "var(--r-sm)" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "600 13px/1.2 var(--font-sans)", color: "var(--fg-1)" }}>{m.name}</div>
+                <div style={{ font: "500 11.5px/1 var(--font-sans)", color: excede ? "var(--danger-500)" : "var(--fg-3)", marginTop: 3 }}>
+                  Saldo: {m.qty} {m.unit}{excede ? " — quantidade excede o saldo!" : ""}
+                </div>
+              </div>
+              <div style={{ width: 90 }}>
+                <MText value={qtds[m.id] || ""} onChange={v => set(m.id, v)} placeholder="0" type="number" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {!temQtd && <div style={{ font: "400 12px var(--font-sans)", color: "var(--fg-3)", textAlign: "center" }}>Informe a quantidade para pelo menos um material.</div>}
+    </Modal>
+  );
+}
+
 /* ---- Botão "Nova movimentação" com dropdown ------------------------------ */
 function NovaMovButton({ onPick }) {
   const [open, setOpen] = React.useState(false);
@@ -400,4 +448,4 @@ function EditProfileModal({ open, onClose, config, onSaved }) {
   );
 }
 
-Object.assign(window, { Modal, MaterialPicker, MovementModal, AddMaterialModal, EditMaterialModal, EditProfileModal, UpdateQtyModal, NovaMovButton, MField, MSelect, MText });
+Object.assign(window, { Modal, MaterialPicker, MovementModal, AddMaterialModal, EditMaterialModal, EditProfileModal, UpdateQtyModal, BulkOutModal, NovaMovButton, MField, MSelect, MText });

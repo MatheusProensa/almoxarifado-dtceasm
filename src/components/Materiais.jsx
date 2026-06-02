@@ -45,7 +45,7 @@ function StockBar({ qty, min }) {
   );
 }
 
-function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit, onDelete, toast }) {
+function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit, onDelete, toast, onBulkOut }) {
   const [q, setQ] = React.useState(initialQ);
   React.useEffect(() => { setQ(initialQ); }, [initialQ]);
   const [cat, setCat] = React.useState(null);
@@ -124,8 +124,7 @@ function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "var(--brand-tint)", border: "1px solid var(--brand-800)", borderRadius: "var(--r-md)", animation: "popIn var(--dur-base) var(--ease-out) both" }}>
           <span style={{ font: "600 12.5px/1 var(--font-sans)", color: "var(--brand-200)" }}>{sel.size} selecionado(s)</span>
           <Divider vertical style={{ height: 18, background: "var(--brand-800)" }} />
-          <Button size="sm" variant="ghost" icon="ArrowUpFromLine" onClick={() => toast({ title: "Saída em lote", tone: "info" })}>Registrar saída</Button>
-          <Button size="sm" variant="ghost" icon="Tag">Etiquetar</Button>
+          <Button size="sm" variant="ghost" icon="ArrowUpFromLine" onClick={() => { onBulkOut && onBulkOut([...sel]); setSel(new Set()); }}>Registrar saída em lote</Button>
           <div style={{ flex: 1 }} />
           <button onClick={() => setSel(new Set())} style={{ background: "none", border: "none", color: "var(--fg-3)", cursor: "pointer", display: "grid", placeItems: "center" }}><Icon name="X" size={16} /></button>
         </div>
