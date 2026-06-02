@@ -907,7 +907,7 @@ function Configuracoes({ theme, onToggleTheme, toast, config, onConfigChange, se
           <img src="../../assets/dtcea-sm-logo.png" alt="" style={{ width: 40, height: 47, objectFit: "contain" }} />
           <div style={{ flex: 1, font: "400 12.5px/1.6 var(--font-sans)", color: "var(--fg-2)" }}>
             Sistema de almoxarifado e controle de estoque do <b>DTCEA-SM</b> · CINDACTA II.<br />
-            Versão 1.0 · Desenvolvido por <b>Matheus Proensa</b> (Cb Proensa · ex-DTCEA-SM).
+            Versão {window.__APP_VERSION__ || "1.0"} · Desenvolvido por <b>Matheus Proensa</b> (Cb Proensa · ex-DTCEA-SM).
           </div>
         </div>
       </Sec>
