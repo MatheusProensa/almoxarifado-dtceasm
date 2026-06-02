@@ -154,6 +154,9 @@ function Historico({ movs, initialTab = "all" }) {
   const [resp, setResp] = React.useState("");
   const [q, setQ] = React.useState("");
   const [per, setPer] = React.useState("all");
+  const [pageSize, setPageSize] = React.useState(15);
+  const [page, setPage] = React.useState(0);
+  React.useEffect(() => { setPage(0); }, [tipo, resp, q, per, pageSize]);
 
   const ref = new Date();
   const dias = { "15d": 15, "1m": 30, "3m": 90, "1a": 365 }[per];
@@ -217,7 +220,7 @@ function Historico({ movs, initialTab = "all" }) {
             <tbody>
               {rows.length === 0
                 ? <tr><td colSpan={8}><div style={{ padding: 40, textAlign: "center", color: "var(--fg-3)", font: "400 13px var(--font-sans)" }}>Nenhuma movimentação para os filtros selecionados.</div></td></tr>
-                : rows.map(m => {
+                : (pageSize === 0 ? rows : rows.slice(page * pageSize, (page + 1) * pageSize)).map(m => {
                   const t = MOVTYPE[m.tipo];
                   return (
                     <tr key={m.id} className="rowh">
@@ -235,7 +238,29 @@ function Historico({ movs, initialTab = "all" }) {
             </tbody>
           </table>
         </div>
-        <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line-1)", font: "500 12px/1 var(--font-sans)", color: "var(--fg-3)" }}>{rows.length} lançamento(s)</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderTop: "1px solid var(--line-1)", flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ font: "500 12px/1 var(--font-sans)", color: "var(--fg-3)" }}>
+              {rows.length === 0 ? "0 lançamentos" : pageSize === 0 ? `${rows.length} lançamentos` : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, rows.length)} de ${rows.length}`}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ font: "500 11.5px/1 var(--font-sans)", color: "var(--fg-3)" }}>por página:</span>
+              {[10, 15, 20, 0].map(n => (
+                <button key={n} onClick={() => setPageSize(n)}
+                  style={{ height: 26, minWidth: 36, padding: "0 8px", borderRadius: "var(--r-xs)", border: "1px solid", cursor: "pointer", font: "600 11.5px/1 var(--font-sans)",
+                    borderColor: pageSize === n ? "var(--brand-500)" : "var(--line-2)",
+                    background: pageSize === n ? "var(--brand-tint)" : "var(--bg-2)",
+                    color: pageSize === n ? "var(--brand-600)" : "var(--fg-2)" }}>
+                  {n === 0 ? "Todos" : n}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <Button size="sm" variant="secondary" icon="ChevronLeft" disabled={page === 0 || pageSize === 0} onClick={() => setPage(p => p - 1)}>Anterior</Button>
+            <Button size="sm" variant="secondary" iconRight="ChevronRight" disabled={pageSize === 0 || (page + 1) * pageSize >= rows.length} onClick={() => setPage(p => p + 1)}>Próximo</Button>
+          </div>
+        </div>
       </Card>
     </div>
   );
