@@ -1,18 +1,6 @@
 {
   "materiais": [
     {
-      "id": 2003,
-      "sku": "NEW-MPWWF288",
-      "name": "teste1",
-      "cat": "cat1780420508331",
-      "loc": "CASCÃO",
-      "qty": 2,
-      "unit": "un",
-      "min": 1,
-      "obs": "teste",
-      "status": "ok"
-    },
-    {
       "id": 1001,
       "sku": "EXP01",
       "name": "Caneta esferográfica azul",
@@ -598,135 +586,6 @@
   ],
   "movimentacoes": [
     {
-      "id": 2011,
-      "tipo": "adj",
-      "sku": "EXP01",
-      "item": "Caneta esferográfica azul",
-      "qty": -1,
-      "unit": "un",
-      "antes": 13,
-      "depois": 12,
-      "resp": "2S Geraldo",
-      "doc": "Revisao",
-      "dest": "",
-      "at": "02/06/2026 14:23"
-    },
-    {
-      "id": 2010,
-      "tipo": "out",
-      "sku": "EXP01",
-      "item": "Caneta esferográfica azul",
-      "qty": 2,
-      "unit": "un",
-      "antes": 15,
-      "depois": 13,
-      "resp": "2S Geraldo",
-      "doc": "—",
-      "dest": "APP",
-      "obs": "",
-      "at": "02/06/2026 14:23"
-    },
-    {
-      "id": 2009,
-      "tipo": "in",
-      "sku": "EXP01",
-      "item": "Caneta esferográfica azul",
-      "qty": 5,
-      "unit": "un",
-      "antes": 10,
-      "depois": 15,
-      "resp": "2S Geraldo",
-      "doc": "TEST-001",
-      "dest": "",
-      "obs": "",
-      "at": "02/06/2026 14:23"
-    },
-    {
-      "id": 2008,
-      "tipo": "adj",
-      "sku": "NEW-MPWWPSQA",
-      "item": "TESTE_REVISAO_EDIT",
-      "qty": 5,
-      "unit": "un",
-      "antes": 5,
-      "depois": 10,
-      "resp": "Sistema",
-      "doc": "Ajuste de estoque",
-      "dest": "",
-      "at": "02/06/2026 14:23"
-    },
-    {
-      "id": 2007,
-      "tipo": "in",
-      "sku": "NEW-MPWWPSQA",
-      "item": "TESTE_REVISAO",
-      "qty": 5,
-      "unit": "un",
-      "antes": 0,
-      "depois": 5,
-      "resp": "2S Geraldo",
-      "doc": "Cadastro inicial",
-      "dest": "",
-      "at": "02/06/2026 14:23"
-    },
-    {
-      "id": 2005,
-      "tipo": "out",
-      "sku": "NEW-MPWWF288",
-      "item": "teste1",
-      "qty": 10,
-      "unit": "un",
-      "antes": 12,
-      "depois": 2,
-      "resp": "Proensa",
-      "doc": "CASCÃO",
-      "dest": "CASCÃO",
-      "obs": "teste",
-      "at": "02/06/2026 14:16"
-    },
-    {
-      "id": 2004,
-      "tipo": "in",
-      "sku": "NEW-MPWWF288",
-      "item": "teste1",
-      "qty": 12,
-      "unit": "un",
-      "antes": 0,
-      "depois": 12,
-      "resp": "2S Geraldo",
-      "doc": "Cadastro inicial",
-      "dest": "",
-      "at": "02/06/2026 14:15"
-    },
-    {
-      "id": 2002,
-      "tipo": "adj",
-      "sku": "NEW-MPVWSXQN",
-      "item": "mandioca",
-      "qty": -72,
-      "unit": "un",
-      "antes": 122,
-      "depois": 50,
-      "resp": "2S Geraldo",
-      "doc": "Edição de cadastro",
-      "dest": "",
-      "at": "02/06/2026 11:37"
-    },
-    {
-      "id": 2001,
-      "tipo": "in",
-      "sku": "NEW-MPVWSXQN",
-      "item": "mandioca",
-      "qty": 122,
-      "unit": "un",
-      "antes": 0,
-      "depois": 122,
-      "resp": "2S Geraldo",
-      "doc": "Cadastro inicial",
-      "dest": "",
-      "at": "01/06/2026 21:38"
-    },
-    {
       "id": 1,
       "tipo": "out",
       "sku": "EXP17",
@@ -870,8 +729,8 @@
   "proximoId": 2012,
   "config": {
     "perfil": {
-      "name": "2S Geraldo",
-      "role": "Encarregado",
+      "name": "Suprimenro",
+      "role": "Admin",
       "unit": "DTCEA-SM"
     },
     "categorias": {
@@ -904,16 +763,6 @@
         "label": "Informática",
         "color": "#6E5BE0",
         "icon": "Printer"
-      },
-      "fer": {
-        "label": "Ferramentas",
-        "color": "#5C6F8A",
-        "icon": "Wrench"
-      },
-      "cat1780420508331": {
-        "label": "Teste",
-        "icon": "Package",
-        "color": "var(--brand-600)"
       }
     },
     "unidades": [
