@@ -77,7 +77,7 @@ function ErroConexao() {
         <div style={{ font: "700 20px/1.3 var(--font-sans)", color: "var(--fg-1)", marginBottom: 12 }}>Servidor não encontrado</div>
         <div style={{ font: "400 14px/1.6 var(--font-sans)", color: "var(--fg-3)", marginBottom: 24 }}>
           O servidor backend não está rodando.<br />
-          Abra o arquivo <strong>iniciar.bat</strong> na pasta do projeto e aguarde.
+          Abra o arquivo <strong>Almox Proensa.exe</strong> na pasta do projeto e aguarde.
         </div>
         <button onClick={() => window.location.reload()}
           style={{ padding: "10px 24px", borderRadius: "var(--r-sm)", border: "none", background: "var(--brand-600)", color: "#fff", font: "600 14px var(--font-sans)", cursor: "pointer" }}>
