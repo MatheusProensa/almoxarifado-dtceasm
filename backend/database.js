@@ -106,7 +106,8 @@ const DADOS_INICIAIS = {
       { name: "2S Geraldo",   color: "var(--brand-600)" },
       { name: "2S Friedrich", color: "#6E5BE0"          },
       { name: "Cb Zimmerman", color: "var(--warn-500)"  }
-    ]
+    ],
+    setores: ["APP", "TWR", "AIS/CMM", "SMST", "SMSO", "SEC", "CASCÃO", "EMS"]
   }
 };
 

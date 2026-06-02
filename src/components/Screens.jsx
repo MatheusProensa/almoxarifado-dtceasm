@@ -600,6 +600,8 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
   const categorias = (config && config.categorias) || window.CATEGORIAS || {};
   const unidades = (config && config.unidades) || window.UNIDADES || [];
   const locais = (config && config.locais) || [];
+  const responsaveis = (config && config.responsaveis) || window.RESPONSAVEIS || [];
+  const setores = (config && config.setores) || window.SETORES || [];
 
   const cats = Object.entries(categorias).map(([id, c]) => ({ id, label: c.label, color: c.color, icon: c.icon }));
   const unids = unidades.map(code => ({ id: code, code, label: (window.UNID_LABELS && window.UNID_LABELS[code]) || code }));
@@ -611,13 +613,30 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
   const catCount = id => materiais.filter(m => m.cat === id).length;
   const locCount = code => materiais.filter(m => (m.loc || "").charAt(0) === code).length;
 
-  const salvarConfig = (novasCats, novasUnids, novosLocais) => {
+  const salvarConfig = (novasCats, novasUnids, novosLocais, novosResp, novosSetores) => {
     if (!config || !onConfigChange) return;
-    onConfigChange({ ...config, categorias: novasCats, unidades: novasUnids, locais: novosLocais });
+    onConfigChange({
+      ...config,
+      categorias: novasCats !== undefined ? novasCats : categorias,
+      unidades: novasUnids !== undefined ? novasUnids : unidades,
+      locais: novosLocais !== undefined ? novosLocais : locais,
+      responsaveis: novosResp !== undefined ? novosResp : responsaveis,
+      setores: novosSetores !== undefined ? novosSetores : setores,
+    });
   };
 
-  const openNew = type => { setF(type === "cat" ? { label: "", icon: "Package", color: CAD_COLORS[0] } : type === "unid" ? { code: "", label: "" } : { code: "", desc: "" }); setEditing({ type, item: null }); };
-  const openEdit = (type, item) => { setF({ ...item }); setEditing({ type, item }); };
+  const openNew = type => {
+    const blank = type === "cat" ? { label: "", icon: "Package", color: CAD_COLORS[0] }
+      : type === "unid" ? { code: "", label: "" }
+      : type === "resp" ? { name: "" }
+      : type === "setor" ? { name: "" }
+      : { code: "", desc: "" };
+    setF(blank); setEditing({ type, item: null });
+  };
+  const openEdit = (type, item) => {
+    setF(type === "resp" ? { name: item.name } : type === "setor" ? { name: item } : { ...item });
+    setEditing({ type, item });
+  };
   const close = () => setEditing(null);
 
   const save = () => {
@@ -627,7 +646,7 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
       const novasCats = { ...categorias };
       if (item) novasCats[item.id] = { label: f.label, icon: f.icon, color: f.color };
       else novasCats["cat" + Date.now()] = { label: f.label, icon: f.icon, color: f.color };
-      salvarConfig(novasCats, unidades, locais);
+      salvarConfig(novasCats, undefined, undefined, undefined, undefined);
       onChange && onChange();
     } else if (type === "unid") {
       if (!f.code) return;
@@ -636,15 +655,28 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
       else if (!novasUnids.includes(f.code)) novasUnids.push(f.code);
       if (!window.UNID_LABELS) window.UNID_LABELS = {};
       window.UNID_LABELS[f.code] = f.label || f.code;
-      salvarConfig(categorias, novasUnids, locais);
+      salvarConfig(undefined, novasUnids, undefined, undefined, undefined);
       onChange && onChange();
-    } else {
+    } else if (type === "local") {
       if (!f.code) return;
       const code = f.code.toUpperCase();
       let novosLocais;
       if (item) novosLocais = locais.map(l => l.id === item.id ? { ...l, code, desc: f.desc || ("Corredor " + code) } : l);
       else novosLocais = [...locais, { id: "l" + Date.now(), code, desc: f.desc || ("Corredor " + code) }];
-      salvarConfig(categorias, unidades, novosLocais);
+      salvarConfig(undefined, undefined, novosLocais, undefined, undefined);
+    } else if (type === "resp") {
+      if (!f.name) return;
+      let novosResp;
+      if (item) novosResp = responsaveis.map(r => r.name === item.name ? { ...r, name: f.name } : r);
+      else novosResp = [...responsaveis, { name: f.name, color: "var(--brand-600)" }];
+      salvarConfig(undefined, undefined, undefined, novosResp, undefined);
+    } else if (type === "setor") {
+      if (!f.name) return;
+      let novosSetores;
+      if (item) novosSetores = setores.map(s => s === item ? f.name.toUpperCase() : s);
+      else if (!setores.includes(f.name.toUpperCase())) novosSetores = [...setores, f.name.toUpperCase()];
+      else return;
+      salvarConfig(undefined, undefined, undefined, undefined, novosSetores);
     }
     toast({ title: item ? "Cadastro atualizado" : "Cadastro criado", tone: "success" });
     close();
@@ -654,15 +686,22 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
       if (materiais.filter(m => m.cat === item.id).length > 0) { toast({ title: "Não foi possível excluir", desc: "Há materiais nesta categoria.", tone: "warn" }); return; }
       if (!window.confirm(`Excluir a categoria "${item.label}"?`)) return;
       const novasCats = { ...categorias }; delete novasCats[item.id];
-      salvarConfig(novasCats, unidades, locais);
+      salvarConfig(novasCats, undefined, undefined, undefined, undefined);
       onChange && onChange();
     } else if (type === "unid") {
       if (!window.confirm(`Excluir a unidade "${item.code}"?`)) return;
-      salvarConfig(categorias, unidades.filter(u => u !== item.code), locais);
+      salvarConfig(undefined, unidades.filter(u => u !== item.code), undefined, undefined, undefined);
       onChange && onChange();
-    } else {
+    } else if (type === "local") {
       if (!window.confirm(`Excluir "${item.desc}"?`)) return;
-      salvarConfig(categorias, unidades, locais.filter(l => l.id !== item.id));
+      salvarConfig(undefined, undefined, locais.filter(l => l.id !== item.id), undefined, undefined);
+    } else if (type === "resp") {
+      if (responsaveis.length <= 1) { toast({ title: "Não é possível excluir", desc: "Precisa haver pelo menos um responsável.", tone: "warn" }); return; }
+      if (!window.confirm(`Excluir o responsável "${item.name}"?`)) return;
+      salvarConfig(undefined, undefined, undefined, responsaveis.filter(r => r.name !== item.name), undefined);
+    } else if (type === "setor") {
+      if (!window.confirm(`Excluir o setor "${item}"?`)) return;
+      salvarConfig(undefined, undefined, undefined, undefined, setores.filter(s => s !== item));
     }
     toast({ title: "Excluído", desc: item.label || item.desc || item.code, tone: "warn" });
   };
@@ -733,10 +772,40 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
         </Card>
       </div>
 
+      {/* Responsáveis e Setores */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
+        <Card pad={20}>
+          {secHead("Responsáveis", "Militares que registram movimentações", "resp")}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {responsaveis.map(r => (
+              <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 11, padding: "8px 10px 8px 12px", background: "var(--bg-inset)", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)" }}>
+                <span style={{ width: 32, height: 32, borderRadius: "50%", display: "grid", placeItems: "center", background: `color-mix(in srgb, ${r.color || "var(--brand-600)"} 15%, transparent)`, color: r.color || "var(--brand-600)", font: "700 13px/1 var(--font-sans)", flexShrink: 0 }}>
+                  {r.name.split(" ").map(p => p[0]).slice(0, 2).join("")}
+                </span>
+                <span style={{ flex: 1, font: "500 13px/1 var(--font-sans)", color: "var(--fg-1)" }}>{r.name}</span>
+                <CadRowActions onEdit={() => openEdit("resp", r)} onDel={() => del("resp", r)} />
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card pad={20}>
+          {secHead("Setores / Destinos", "Seções que recebem materiais nas saídas", "setor")}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {setores.map(s => (
+              <div key={s} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px 7px 13px", background: "var(--bg-inset)", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)" }}>
+                <span style={{ font: "600 13px/1 var(--font-sans)", color: "var(--fg-1)" }}>{s}</span>
+                <CadRowActions onEdit={() => openEdit("setor", s)} onDel={() => del("setor", s)} />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
       {/* Modal de edição/criação */}
       <Modal open={!!editing} onClose={close}
-        icon={editing && editing.type === "cat" ? "Tags" : editing && editing.type === "unid" ? "Ruler" : "MapPin"} iconColor="var(--brand-600)"
-        title={editing ? (editing.item ? "Editar " : "Adicionar ") + (editing.type === "cat" ? "categoria" : editing.type === "unid" ? "unidade" : "local") : ""}
+        icon={editing && editing.type === "cat" ? "Tags" : editing && editing.type === "unid" ? "Ruler" : editing && editing.type === "resp" ? "User" : editing && editing.type === "setor" ? "Building2" : "MapPin"} iconColor="var(--brand-600)"
+        title={editing ? (editing.item ? "Editar " : "Adicionar ") + (editing.type === "cat" ? "categoria" : editing.type === "unid" ? "unidade" : editing.type === "resp" ? "responsável" : editing.type === "setor" ? "setor" : "local") : ""}
         footer={<>
           <Button variant="ghost" onClick={close}>Cancelar</Button>
           <Button variant="primary" icon="Check" onClick={save}>Salvar</Button>
@@ -767,6 +836,12 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
         {editing && editing.type === "local" && <>
           <MField label="Código do corredor" required hint="Uma letra (ex.: A, B, C…)"><MText value={f.code || ""} onChange={v => set("code", v.toUpperCase().slice(0, 2))} placeholder="A" /></MField>
           <MField label="Descrição"><MText value={f.desc || ""} onChange={v => set("desc", v)} placeholder="Corredor A — Expediente" /></MField>
+        </>}
+        {editing && editing.type === "resp" && <>
+          <MField label="Nome / posto" required hint="Ex.: 2S Geraldo, Cb Zimmerman"><MText value={f.name || ""} onChange={v => set("name", v)} placeholder="2S Nome" /></MField>
+        </>}
+        {editing && editing.type === "setor" && <>
+          <MField label="Sigla do setor" required hint="Ex.: APP, TWR, SMST"><MText value={f.name || ""} onChange={v => set("name", v.toUpperCase())} placeholder="APP" /></MField>
         </>}
       </Modal>
     </div>
