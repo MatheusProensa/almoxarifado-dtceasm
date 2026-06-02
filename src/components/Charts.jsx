@@ -111,7 +111,7 @@ function Donut({ data, size = 150, thick = 16 }) {
   let acc = 0;
   const arcs = data.map(d => {
     const frac = d.value / total;
-    const seg = { ...d, frac, dash: frac * C, offset: acc * C, color: window.CATEGORIAS[d.cat].color };
+    const seg = { ...d, frac, dash: frac * C, offset: acc * C, color: getCat(d.cat).color };
     acc += frac; return seg;
   });
   const active = hover != null ? arcs[hover] : null;
@@ -135,7 +135,7 @@ function Donut({ data, size = 150, thick = 16 }) {
               {active ? active.value : total.toLocaleString("pt-BR")}
             </div>
             <div style={{ font: "600 9.5px/1 var(--font-sans)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-3)", marginTop: 4 }}>
-              {active ? window.CATEGORIAS[active.cat].label : "itens"}
+              {active ? getCat(active.cat).label : "itens"}
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ function Donut({ data, size = 150, thick = 16 }) {
           <div key={i} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}
             style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", opacity: hover == null || hover === i ? 1 : 0.5, transition: "opacity var(--dur-fast)" }}>
             <span style={{ width: 9, height: 9, borderRadius: 3, background: a.color, flexShrink: 0 }} />
-            <span style={{ flex: 1, font: "500 12.5px/1 var(--font-sans)", color: "var(--fg-2)" }}>{window.CATEGORIAS[a.cat].label}</span>
+            <span style={{ flex: 1, font: "500 12.5px/1 var(--font-sans)", color: "var(--fg-2)" }}>{getCat(a.cat).label}</span>
             <span style={{ font: "600 12px/1 var(--font-sans)", color: "var(--fg-1)" }}>{(a.frac * 100).toFixed(0)}%</span>
             <span style={{ font: "500 11.5px/1 var(--font-sans)", color: "var(--fg-3)", minWidth: 38, textAlign: "right" }}>{a.value}</span>
           </div>

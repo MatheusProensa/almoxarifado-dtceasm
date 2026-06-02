@@ -1,8 +1,8 @@
 /* ============================================================================
-   App.jsx — shell, tema claro/escuro, roteamento, modais, estado global
+   AppRoot.jsx — shell, tema claro/escuro, roteamento, modais, estado global
    ========================================================================== */
 
-function CommandPalette({ open, onClose, materiais, setView }) {
+function CommandPalette({ open, onClose, materiais, setView, onMatSelect }) {
   const [q, setQ] = React.useState("");
   const inputRef = React.useRef(null);
   React.useEffect(() => { if (open) { setQ(""); setTimeout(() => inputRef.current && inputRef.current.focus(), 30); } }, [open]);
@@ -28,9 +28,9 @@ function CommandPalette({ open, onClose, materiais, setView }) {
           {nav.map(n => <PRow key={n.to} icon={n.icon} label={n.label} onClick={() => { setView(n.to); onClose(); }} />)}
           {mats.length > 0 && <PSection title="Materiais" />}
           {mats.map(m => (
-            <PRow key={m.id} icon={CATEGORIAS[m.cat].icon} label={m.name}
+            <PRow key={m.id} icon={getCat(m.cat).icon} label={m.name}
               right={<><span style={{ font: "500 11px/1 var(--font-sans)", color: "var(--fg-4)" }}>{m.loc}</span><StatusPill status={m.status} /></>}
-              onClick={() => { setView("materiais"); onClose(); }} />
+              onClick={() => { onMatSelect && onMatSelect(m.name); setView("materiais"); onClose(); }} />
           ))}
           {nav.length === 0 && mats.length === 0 && <div style={{ padding: 28, textAlign: "center", color: "var(--fg-3)", font: "400 13px var(--font-sans)" }}>Nenhum resultado para "{q}"</div>}
         </div>
@@ -69,25 +69,75 @@ function Placeholder({ view }) {
   );
 }
 
+function ErroConexao() {
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "var(--bg-1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center", maxWidth: 420, padding: 32 }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+        <div style={{ font: "700 20px/1.3 var(--font-sans)", color: "var(--fg-1)", marginBottom: 12 }}>Servidor não encontrado</div>
+        <div style={{ font: "400 14px/1.6 var(--font-sans)", color: "var(--fg-3)", marginBottom: 24 }}>
+          O servidor backend não está rodando.<br />
+          Abra o arquivo <strong>iniciar.bat</strong> na pasta do projeto e aguarde.
+        </div>
+        <button onClick={() => window.location.reload()}
+          style={{ padding: "10px 24px", borderRadius: "var(--r-sm)", border: "none", background: "var(--brand-600)", color: "#fff", font: "600 14px var(--font-sans)", cursor: "pointer" }}>
+          Tentar novamente
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Shell() {
   const toast = useToast();
   const [theme, setTheme] = React.useState(() => localStorage.getItem("almox-theme") || "light");
   const [view, setViewRaw] = React.useState("dashboard");
   const [collapsed, setCollapsed] = React.useState(false);
   const [paletteOpen, setPaletteOpen] = React.useState(false);
-  const [modal, setModal] = React.useState(null); // "in" | "out" | "adj" | "new"
+  const [modal, setModal] = React.useState(null);
   const [preset, setPreset] = React.useState("");
   const openModal = (type, sku = "") => { setPreset(sku); setModal(type); };
   const [editMat, setEditMat] = React.useState(null);
   const [profileOpen, setProfileOpen] = React.useState(false);
   const openEdit = (m) => { setEditMat(m); setModal("edit"); };
-  const [materiais, setMateriais] = React.useState(MATERIAIS);
-  const [movs, setMovs] = React.useState(MOVIMENTACOES);
-  const [, setDataVer] = React.useState(0);
-  const refreshData = React.useCallback(() => setDataVer(v => v + 1), []);
+  const [materiais, setMateriais] = React.useState([]);
+  const [movs, setMovs] = React.useState([]);
+  const [config, setConfig] = React.useState(null);
+  const [carregando, setCarregando] = React.useState(true);
+  const [erroConexao, setErroConexao] = React.useState(false);
   const [loadingMat, setLoadingMat] = React.useState(false);
+  const [matInitialQ, setMatInitialQ] = React.useState("");
   const [histFilter, setHistFilter] = React.useState("all");
   const scrollRef = React.useRef(null);
+
+  // Carregar dados do backend ao iniciar
+  React.useEffect(() => {
+    Promise.all([api.getMateriais(), api.getMovimentacoes(), api.getConfig()])
+      .then(([mats, movimentos, cfg]) => {
+        setMateriais(mats);
+        setMovs(movimentos);
+        setConfig(cfg);
+        // Atualiza globals usados pelos componentes
+        window.CATEGORIAS = cfg.categorias;
+        window.UNIDADES = cfg.unidades;
+        window.PROFILE = cfg.perfil;
+        window.RESPONSAVEIS = cfg.responsaveis;
+        setCarregando(false);
+      })
+      .catch(() => {
+        setErroConexao(true);
+        setCarregando(false);
+      });
+  }, []);
+
+  const updateConfig = React.useCallback((novoConfig) => {
+    setConfig(novoConfig);
+    window.CATEGORIAS = novoConfig.categorias;
+    window.UNIDADES = novoConfig.unidades;
+    window.PROFILE = novoConfig.perfil;
+    window.RESPONSAVEIS = novoConfig.responsaveis;
+    api.putConfig(novoConfig).catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     if (theme === "dark") document.documentElement.setAttribute("data-theme", "dark");
@@ -97,6 +147,7 @@ function Shell() {
 
   const setView = (v, filter) => {
     if (v === "movimentacao" || v === "historico") setHistFilter(filter || "all");
+    if (v !== "materiais") setMatInitialQ("");
     setViewRaw(v);
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
     if (v === "materiais") { setLoadingMat(true); setTimeout(() => setLoadingMat(false), 600); }
@@ -117,54 +168,70 @@ function Shell() {
     crit: materiais.filter(m => m.status === "crit" || m.status === "zero").length,
   };
 
-  const submitMovement = ({ tipo, sku, mat, qty, resp, doc, dest, obs, at }) => {
+  const submitMovement = ({ tipo, sku, mat, qty, resp, doc, dest, obs }) => {
     const code = sku || mat;
-    const n = parseInt(qty, 10) || 0;
-    const item = materiais.find(m => m.sku === code);
-    const antes = item ? item.qty : 0;
-    const depois = Math.max(0, antes + (tipo === "in" ? n : -n));
-    setMateriais(prev => prev.map(m => m.sku === code ? { ...m, qty: depois, status: statusOf(depois, m.min) } : m));
-    setMovs(prev => [{ id: Date.now(), tipo, sku: code, item: item ? item.name : code, qty: n, unit: item ? item.unit : "un", antes, depois, resp: resp || "2S Geraldo", doc: doc || "—", dest: dest || "", at: at || "31/05/2026" }, ...prev]);
-    toast({ title: tipo === "in" ? "Entrada registrada" : "Saída registrada", desc: n + " " + (item ? item.unit : "un") + " · " + (item ? item.name : code), tone: tipo === "in" ? "success" : "info" });
-    setModal(null);
+    api.postMovimentacao({ tipo, sku: code, qty, resp, doc, dest, obs })
+      .then(({ movimentacao, material }) => {
+        setMateriais(prev => prev.map(m => m.sku === material.sku ? material : m));
+        setMovs(prev => [movimentacao, ...prev]);
+        toast({ title: tipo === "in" ? "Entrada registrada" : "Saída registrada", desc: qty + " " + material.unit + " · " + material.name, tone: tipo === "in" ? "success" : "info" });
+        setModal(null);
+      })
+      .catch(() => toast({ title: "Erro ao registrar", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
   };
 
   const submitNewMaterial = (f) => {
-    const sku = "NEW-" + Date.now().toString(36).toUpperCase();
-    const m = { id: Date.now(), sku, name: f.name, cat: f.cat, loc: f.loc || "—", qty: f.qty, unit: f.unit, min: f.min, obs: f.obs };
-    m.status = statusOf(m.qty, m.min);
-    setMateriais(prev => [m, ...prev]);
-    toast({ title: "Material cadastrado", desc: f.name, tone: "success" });
-    setModal(null);
+    api.postMaterial(f)
+      .then(novo => {
+        setMateriais(prev => [novo, ...prev]);
+        toast({ title: "Material cadastrado", desc: f.name, tone: "success" });
+        setModal(null);
+      })
+      .catch(() => toast({ title: "Erro ao cadastrar", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
   };
 
   const submitEditMaterial = (upd) => {
-    const orig = materiais.find(m => m.sku === upd.sku);
-    setMateriais(prev => prev.map(m => m.sku === upd.sku ? { ...upd, status: statusOf(upd.qty, upd.min) } : m));
-    if (orig && upd.qty !== orig.qty) {
-      const diff = upd.qty - orig.qty;
-      setMovs(prev => [{ id: Date.now(), tipo: "adj", sku: upd.sku, item: upd.name, qty: diff, unit: upd.unit, antes: orig.qty, depois: upd.qty, resp: "2S Geraldo", doc: "Edição de cadastro", dest: "", at: "31/05/2026" }, ...prev]);
-    }
-    toast({ title: "Material atualizado", desc: upd.name, tone: "success" });
-    setModal(null);
+    const { resp, ...dadosMaterial } = upd;
+    api.putMaterial(upd.sku, { ...dadosMaterial, resp: resp || "2S Geraldo" })
+      .then(atualizado => {
+        setMateriais(prev => prev.map(m => m.sku === upd.sku ? atualizado : m));
+        api.getMovimentacoes().then(setMovs);
+        toast({ title: "Material atualizado", desc: upd.name, tone: "success" });
+        setModal(null);
+      })
+      .catch(() => toast({ title: "Erro ao atualizar", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
   };
 
   const deleteMaterial = (m) => {
     if (!window.confirm(`Excluir "${m.name}" do catálogo? Esta ação não pode ser desfeita.`)) return;
-    setMateriais(prev => prev.filter(x => x.sku !== m.sku));
-    toast({ title: "Material excluído", desc: m.name, tone: "warn" });
+    api.deleteMaterial(m.sku)
+      .then(() => {
+        setMateriais(prev => prev.filter(x => x.sku !== m.sku));
+        toast({ title: "Material excluído", desc: m.name, tone: "warn" });
+      })
+      .catch(() => toast({ title: "Erro ao excluir", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
   };
 
   const submitUpdateQty = ({ sku, novo, motivo }) => {
-    const item = materiais.find(m => m.sku === sku);
-    if (!item) return;
-    const antes = item.qty;
-    const diff = novo - antes;
-    setMateriais(prev => prev.map(m => m.sku === sku ? { ...m, qty: novo, status: statusOf(novo, m.min) } : m));
-    if (diff !== 0) setMovs(prev => [{ id: Date.now(), tipo: "adj", sku, item: item.name, qty: diff, unit: item.unit, antes, depois: novo, resp: "2S Geraldo", doc: motivo, dest: "", at: "31/05/2026" }, ...prev]);
-    toast({ title: "Estoque atualizado", desc: item.name, tone: "success" });
-    setModal(null);
+    api.postAjuste({ sku, novoQty: novo, motivo })
+      .then(({ material }) => {
+        setMateriais(prev => prev.map(m => m.sku === sku ? material : m));
+        api.getMovimentacoes().then(setMovs);
+        toast({ title: "Estoque atualizado", desc: material.name, tone: "success" });
+        setModal(null);
+      })
+      .catch(() => toast({ title: "Erro ao ajustar", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
   };
+
+  if (erroConexao) return <ErroConexao />;
+
+  if (carregando) return (
+    <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-1)" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ font: "600 15px var(--font-sans)", color: "var(--fg-3)" }}>Carregando dados...</div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="app-shell" style={{ display: "flex", height: "100%", position: "relative" }}>
@@ -173,17 +240,18 @@ function Shell() {
         <Topbar theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")}
           onSearch={() => setPaletteOpen(true)} alertas={alertas} movs={movs}
           onOpenAlertas={() => setView("alertas")} onOpenHistorico={() => setView("movimentacao")}
-          onOpenGuia={() => setView("guia")} onOpenProfile={() => setProfileOpen(true)} toast={toast} />
+          onOpenGuia={() => setView("guia")} onOpenProfile={() => setProfileOpen(true)} toast={toast}
+          perfil={config && config.perfil} />
         <main ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 26px 44px" }}>
           <div style={{ maxWidth: 1340, margin: "0 auto" }}>
             {view === "dashboard" && <Dashboard materiais={materiais} alertas={alertas} movs={movs} openModal={openModal} setView={setView} toast={toast} />}
-            {view === "materiais" && <Materiais materiais={materiais} loading={loadingMat} onNew={() => openModal("new")} openModal={openModal} onEdit={openEdit} onDelete={deleteMaterial} toast={toast} />}
+            {view === "materiais" && <Materiais materiais={materiais} loading={loadingMat} initialQ={matInitialQ} onNew={() => openModal("new")} openModal={openModal} onEdit={openEdit} onDelete={deleteMaterial} toast={toast} />}
             {view === "entradas" && <MovementScreen tipo="in" materiais={materiais} onSubmit={submitMovement} onAdjust={submitUpdateQty} />}
             {view === "saidas" && <MovementScreen tipo="out" materiais={materiais} onSubmit={submitMovement} onAdjust={submitUpdateQty} />}
             {(view === "movimentacao" || view === "historico") && <Historico movs={movs} initialTab={histFilter} />}
             {view === "relatorios" && <Relatorios materiais={materiais} movs={movs} alertas={alertas} />}
-            {view === "categorias" && <Cadastros materiais={materiais} toast={toast} onChange={refreshData} />}
-            {view === "config" && <Configuracoes theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")} toast={toast} onChange={refreshData} setView={setView} />}
+            {view === "categorias" && <Cadastros materiais={materiais} toast={toast} config={config} onConfigChange={updateConfig} onChange={() => api.getMateriais().then(setMateriais)} />}
+            {view === "config" && <Configuracoes theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")} toast={toast} config={config} onConfigChange={updateConfig} setView={setView} />}
             {view === "guia" && <Guia setView={setView} />}
             {view === "alertas" && <Alertas alertas={alertas} toast={toast} openModal={openModal} />}
             {PLACEHOLDER_META[view] && <Placeholder view={view} />}
@@ -191,11 +259,11 @@ function Shell() {
         </main>
       </div>
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} materiais={materiais} setView={setView} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} materiais={materiais} setView={setView} onMatSelect={q => setMatInitialQ(q)} />
       <MovementModal open={modal === "in" || modal === "out"} tipo={modal} materiais={materiais} initialSku={preset} onClose={() => setModal(null)} onSubmit={submitMovement} />
       <AddMaterialModal open={modal === "new"} onClose={() => setModal(null)} onSubmit={submitNewMaterial} />
       <EditMaterialModal open={modal === "edit"} material={editMat} onClose={() => setModal(null)} onSubmit={submitEditMaterial} />
-      <EditProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} onSaved={refreshData} />
+      <EditProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} config={config} onSaved={(novoPerfil) => { if (config) updateConfig({ ...config, perfil: novoPerfil }); }} />
       <UpdateQtyModal open={modal === "adj"} materiais={materiais} initialSku={preset} onClose={() => setModal(null)} onSubmit={submitUpdateQty} />
     </div>
   );

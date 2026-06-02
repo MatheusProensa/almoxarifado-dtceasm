@@ -26,7 +26,10 @@ function ThemeToggle({ theme, onToggle }) {
 
 function Notifications({ alertas, movs, onOpenAlertas, onOpenHistorico }) {
   const [open, setOpen] = React.useState(false);
-  const [read, setRead] = React.useState(false);
+  const [skusLidos, setSkusLidos] = React.useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("almox-notif-lidos") || "[]")); }
+    catch { return new Set(); }
+  });
   const ref = React.useRef(null);
   React.useEffect(() => {
     const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -34,16 +37,23 @@ function Notifications({ alertas, movs, onOpenAlertas, onOpenHistorico }) {
     return () => document.removeEventListener("mousedown", h);
   }, []);
   const criticos = alertas.filter(m => m.status === "zero" || m.status === "crit").slice(0, 4);
+  const naoLidos = alertas.filter(m => !skusLidos.has(m.sku));
+  const todasLidas = naoLidos.length === 0;
+  const marcarLidas = () => {
+    const novos = new Set([...skusLidos, ...alertas.map(m => m.sku)]);
+    setSkusLidos(novos);
+    localStorage.setItem("almox-notif-lidos", JSON.stringify([...novos]));
+  };
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <IconButton name="Bell" label="Notificações" badge={read ? null : (alertas.length || null)} active={open} onClick={() => setOpen(o => !o)} />
+      <IconButton name="Bell" label="Notificações" badge={todasLidas ? null : (naoLidos.length || null)} active={open} onClick={() => setOpen(o => !o)} />
       {open && (
         <div style={{ position: "absolute", right: 0, top: 44, zIndex: 40, width: 360, maxWidth: "86vw", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", boxShadow: "var(--shadow-pop)", overflow: "hidden", animation: "popIn var(--dur-fast) var(--ease-out) both" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 15px", borderBottom: "1px solid var(--line-1)" }}>
             <span style={{ font: "700 13.5px/1 var(--font-sans)", color: "var(--fg-1)" }}>Notificações</span>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              {!read && alertas.length > 0 && <button onClick={() => setRead(true)} style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "600 11px/1 var(--font-sans)", color: "var(--brand-600)", background: "none", border: "none", cursor: "pointer" }}><Icon name="CheckCheck" size={14} />Marcar como lidas</button>}
-              <span style={{ font: "600 11px/1 var(--font-sans)", color: read ? "var(--ok-500)" : "var(--danger-500)", background: read ? "var(--ok-tint)" : "var(--danger-tint)", padding: "3px 8px", borderRadius: 999 }}>{read ? "Em dia" : alertas.length + " alertas"}</span>
+              {!todasLidas && alertas.length > 0 && <button onClick={marcarLidas} style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "600 11px/1 var(--font-sans)", color: "var(--brand-600)", background: "none", border: "none", cursor: "pointer" }}><Icon name="CheckCheck" size={14} />Marcar como lidas</button>}
+              <span style={{ font: "600 11px/1 var(--font-sans)", color: todasLidas ? "var(--ok-500)" : "var(--danger-500)", background: todasLidas ? "var(--ok-tint)" : "var(--danger-tint)", padding: "3px 8px", borderRadius: 999 }}>{todasLidas ? "Em dia" : naoLidos.length + " alertas"}</span>
             </div>
           </div>
           <div style={{ maxHeight: 380, overflowY: "auto" }}>
@@ -86,18 +96,17 @@ function NRow({ icon, color, title, sub, onClick }) {
   );
 }
 
-function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile }) {
+function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile, perfil }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
   const dark = theme === "dark";
-  const P = window.PROFILE || { name: "2S Geraldo", role: "Encarregado" };
+  const P = perfil || window.PROFILE || { name: "2S Geraldo", role: "Encarregado" };
   React.useEffect(() => {
     const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
   const item = (icon, label, onClick, danger) => {
-    const [h, setH] = [0, 0]; // placeholder, real hover below
     return (
       <button onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 11, width: "100%", height: 40, padding: "0 12px", border: "none", borderRadius: "var(--r-sm)", cursor: "pointer", background: "transparent", color: danger ? "var(--danger-500)" : "var(--fg-1)", font: "500 13px/1 var(--font-sans)", textAlign: "left" }}
         onMouseEnter={e => e.currentTarget.style.background = danger ? "var(--danger-tint)" : "var(--bg-3)"}
@@ -136,7 +145,7 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile })
             {item("LifeBuoy", "Ajuda e guia", () => { setOpen(false); onOpenGuia(); })}
           </div>
           <div style={{ padding: 6, borderTop: "1px solid var(--line-1)" }}>
-            {item("LogOut", "Sair", () => { setOpen(false); toast({ title: "Sessão encerrada", desc: "Até logo, 2S Geraldo", tone: "info" }); }, true)}
+            {item("LogOut", "Sair", () => { setOpen(false); toast({ title: "Sessão encerrada", desc: `Até logo, ${P.name}`, tone: "info" }); }, true)}
           </div>
         </div>
       )}
@@ -144,7 +153,7 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile })
   );
 }
 
-function Topbar({ theme, onToggleTheme, onSearch, alertas, movs, onOpenAlertas, onOpenHistorico, onOpenGuia, onOpenProfile, toast }) {
+function Topbar({ theme, onToggleTheme, onSearch, alertas, movs, onOpenAlertas, onOpenHistorico, onOpenGuia, onOpenProfile, toast, perfil }) {
   return (
     <header style={{
       position: "relative", zIndex: 3, height: "var(--topbar-h)", flexShrink: 0,
@@ -164,7 +173,7 @@ function Topbar({ theme, onToggleTheme, onSearch, alertas, movs, onOpenAlertas, 
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         <Notifications alertas={alertas} movs={movs} onOpenAlertas={onOpenAlertas} onOpenHistorico={onOpenHistorico} />
         <Divider vertical style={{ height: 26, margin: "0 2px" }} />
-        <ProfileMenu theme={theme} onToggleTheme={onToggleTheme} toast={toast} onOpenGuia={onOpenGuia} onOpenProfile={onOpenProfile} />
+        <ProfileMenu theme={theme} onToggleTheme={onToggleTheme} toast={toast} onOpenGuia={onOpenGuia} onOpenProfile={onOpenProfile} perfil={perfil} />
       </div>
     </header>
   );

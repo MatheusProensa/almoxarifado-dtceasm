@@ -120,12 +120,12 @@ function MaterialPicker({ materiais, value, onChange, placeholder = "Buscar mate
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 9px", border: "none", borderRadius: "var(--r-sm)", cursor: "pointer", background: m.sku === value ? "var(--brand-tint)" : "transparent", textAlign: "left" }}
               onMouseEnter={e => { if (m.sku !== value) e.currentTarget.style.background = "var(--bg-3)"; }}
               onMouseLeave={e => { if (m.sku !== value) e.currentTarget.style.background = "transparent"; }}>
-              <span style={{ width: 26, height: 26, borderRadius: 6, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${CATEGORIAS[m.cat].color} 14%, transparent)`, color: CATEGORIAS[m.cat].color, flexShrink: 0 }}>
-                <Icon name={CATEGORIAS[m.cat].icon} size={14} />
+              <span style={{ width: 26, height: 26, borderRadius: 6, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${getCat(m.cat).color} 14%, transparent)`, color: getCat(m.cat).color, flexShrink: 0 }}>
+                <Icon name={getCat(m.cat).icon} size={14} />
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: "block", font: "600 12.5px/1.2 var(--font-sans)", color: "var(--fg-1)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.name}</span>
-                <span style={{ font: "500 11px/1 var(--font-sans)", color: "var(--fg-3)" }}>{CATEGORIAS[m.cat].label} · {m.loc}</span>
+                <span style={{ font: "500 11px/1 var(--font-sans)", color: "var(--fg-3)" }}>{getCat(m.cat).label} · {m.loc}</span>
               </span>
               <span style={{ font: "600 12px/1 var(--font-sans)", color: STATUS[m.status].color, flexShrink: 0 }}>{m.qty} {m.unit}</span>
             </button>
@@ -139,7 +139,7 @@ function MaterialPicker({ materiais, value, onChange, placeholder = "Buscar mate
 /* ---- Registrar entrada / saída ------------------------------------------- */
 function MovementModal({ open, tipo, materiais, onClose, onSubmit, initialSku = "" }) {
   const t = MOVTYPE[tipo] || MOVTYPE.in;
-  const HOJE = "2026-05-31";
+  const HOJE = new Date().toISOString().slice(0, 10);
   const toBR = d => { const p = d.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; };
   const [sku, setSku] = React.useState("");
   const [qty, setQty] = React.useState("");
@@ -241,19 +241,19 @@ function AddMaterialModal({ open, onClose, onSubmit }) {
 
 /* ---- Editar material ------------------------------------------------------ */
 function EditMaterialModal({ open, material, onClose, onSubmit }) {
-  const [f, setF] = React.useState({ name: "", cat: "", unit: "un", loc: "", qty: "", min: "", obs: "" });
-  React.useEffect(() => { if (open && material) setF({ name: material.name, cat: material.cat, unit: material.unit, loc: material.loc, qty: String(material.qty), min: String(material.min), obs: material.obs || "" }); }, [open, material]);
+  const [f, setF] = React.useState({ name: "", cat: "", unit: "un", loc: "", qty: "", min: "", obs: "", resp: "" });
+  React.useEffect(() => { if (open && material) setF({ name: material.name, cat: material.cat, unit: material.unit, loc: material.loc, qty: String(material.qty), min: String(material.min), obs: material.obs || "", resp: "" }); }, [open, material]);
   if (!material) return null;
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
-  const ready = f.name && f.cat && f.min !== "";
   const qtyChanged = parseInt(f.qty, 10) !== material.qty;
+  const ready = f.name && f.cat && f.min !== "" && f.resp;
   return (
     <Modal open={open} onClose={onClose} icon="Pencil" iconColor="var(--brand-600)" width={540}
       title="Editar material" subtitle={material.name}
       footer={<>
         <Button variant="ghost" onClick={onClose}>Cancelar</Button>
         <Button variant="primary" icon="Check" disabled={!ready}
-          onClick={() => onSubmit({ ...material, name: f.name, cat: f.cat, unit: f.unit, loc: f.loc || "—", qty: parseInt(f.qty, 10) || 0, min: parseInt(f.min, 10) || 0, obs: f.obs })}>Salvar alterações</Button>
+          onClick={() => onSubmit({ ...material, name: f.name, cat: f.cat, unit: f.unit, loc: f.loc || "—", qty: parseInt(f.qty, 10) || 0, min: parseInt(f.min, 10) || 0, obs: f.obs, resp: f.resp })}>Salvar alterações</Button>
       </>}>
       <MField label="Nomenclatura do material" required><MText value={f.name} onChange={v => set("name", v)} placeholder="Nome do material" /></MField>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
@@ -272,6 +272,10 @@ function EditMaterialModal({ open, material, onClose, onSubmit }) {
           A mudança de saldo ({material.qty} → {parseInt(f.qty, 10) || 0} {f.unit}) será registrada como ajuste no histórico.
         </div>
       )}
+      <MField label="Responsável" required>
+        <MSelect value={f.resp} placeholder="Selecione o responsável" onChange={v => set("resp", v)}
+          options={RESPONSAVEIS.map(r => ({ value: r.name, label: r.name }))} />
+      </MField>
       <MField label="Localização física" hint="Corredor-Prateleira-Nível"><MText value={f.loc} onChange={v => set("loc", v.toUpperCase())} placeholder="A-01-1" /></MField>
       <MField label="Observações">
         <textarea value={f.obs} onChange={e => set("obs", e.target.value)} rows={2} placeholder="Notas, especificações…"
@@ -370,16 +374,21 @@ function NovaMovButton({ onPick }) {
 }
 
 /* ---- Editar perfil -------------------------------------------------------- */
-function EditProfileModal({ open, onClose, onSaved }) {
-  const base = window.PROFILE || { name: "2S Geraldo", role: "Encarregado do almoxarifado" };
+function EditProfileModal({ open, onClose, config, onSaved }) {
+  const base = (config && config.perfil) || window.PROFILE || { name: "2S Geraldo", role: "Encarregado do almoxarifado" };
   const [name, setName] = React.useState(base.name);
   const [role, setRole] = React.useState(base.role);
-  React.useEffect(() => { if (open) { const p = window.PROFILE || base; setName(p.name); setRole(p.role); } }, [open]);
+  React.useEffect(() => { if (open) { const p = (config && config.perfil) || window.PROFILE || base; setName(p.name); setRole(p.role); } }, [open, config]);
   return (
     <Modal open={open} onClose={onClose} icon="User" iconColor="var(--brand-600)" title="Editar perfil" subtitle="Seus dados de operador"
       footer={<>
         <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-        <Button variant="primary" icon="Check" disabled={!name} onClick={() => { window.PROFILE = { ...(window.PROFILE || {}), name, role }; onSaved && onSaved(); onClose(); }}>Salvar</Button>
+        <Button variant="primary" icon="Check" disabled={!name} onClick={() => {
+          const novoPerfil = { ...(config && config.perfil || {}), name, role };
+          window.PROFILE = novoPerfil;
+          onSaved && onSaved(novoPerfil);
+          onClose();
+        }}>Salvar</Button>
       </>}>
       <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 2 }}>
         <Avatar name={name || "--"} size={46} />
