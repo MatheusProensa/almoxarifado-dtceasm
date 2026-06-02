@@ -120,7 +120,7 @@ function MovementScreen({ tipo: tipoProp, materiais, onSubmit, onAdjust }) {
                   ? <MField label="Responsável" required><MSelect value={resp} placeholder="Selecione" onChange={setResp} options={RESPONSAVEIS.map(r => ({ value: r.name, label: r.name }))} /></MField>
                   : <MField label="Militar (quem retirou)" required><MText value={resp} onChange={setResp} placeholder="Nome do militar" /></MField>}
                 {isIn
-                  ? <MField label="Documento" hint="GFM / GMM"><MText value={doc} onChange={setDoc} placeholder="GFM/GMM nº 0000" /></MField>
+                  ? <MField label="Documento"><MText value={doc} onChange={setDoc} placeholder="GFM/GMM nº 0000" /></MField>
                   : <MField label="Destino / setor" required>
                       <MSelect value={dest} placeholder="Selecione o setor" onChange={setDest} options={SETORES.map(s => ({ value: s, label: s }))} />
                     </MField>}
