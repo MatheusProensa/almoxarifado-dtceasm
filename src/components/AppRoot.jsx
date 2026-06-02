@@ -51,23 +51,6 @@ function PRow({ icon, label, right, onClick }) {
   );
 }
 
-const PLACEHOLDER_META = {
-  transferencias: { icon: "Repeat", title: "Transferências", desc: "Transferências entre locais e setores do depósito." },
-  unidades:       { icon: "Ruler", title: "Unidades de medida", desc: "Cadastro de unidades (un, cx, pct, rm, fd, L…)." },
-  locais:         { icon: "MapPin", title: "Locais de estoque", desc: "Corredores, prateleiras e níveis do depósito." },
-  usuarios:       { icon: "Users", title: "Usuários", desc: "Militares com permissão para operar o sistema." },
-};
-function Placeholder({ view }) {
-  const meta = PLACEHOLDER_META[view] || { icon: "Construction", title: "Em construção", desc: "Tela do roadmap do UI kit." };
-  return (
-    <div className="view-enter">
-      <Card style={{ minHeight: 440, display: "grid", placeItems: "center" }}>
-        <EmptyState icon={meta.icon} title={meta.title} desc={meta.desc}
-          action={<Badge color="var(--brand-600)" tint="var(--brand-tint)" icon="Hammer">Tela demonstrativa do UI kit</Badge>} />
-      </Card>
-    </div>
-  );
-}
 
 function ErroConexao() {
   return (
@@ -273,7 +256,6 @@ function Shell() {
             {view === "config" && <Configuracoes theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")} toast={toast} config={config} onConfigChange={updateConfig} setView={setView} />}
             {view === "guia" && <Guia setView={setView} />}
             {view === "alertas" && <Alertas alertas={alertas} toast={toast} openModal={openModal} />}
-            {PLACEHOLDER_META[view] && <Placeholder view={view} />}
           </div>
         </main>
       </div>
