@@ -261,4 +261,4 @@ function Legend({ dot, label }) {
   );
 }
 
-Object.assign(window, { Dashboard, calcularSerie, calcularMaisUsados, calcularMovCategoria, calcularPorCategoria, calcularKpis });
+Object.assign(window, { Dashboard, calcularSerie, calcularMaisUsados, calcularMovCategoria, calcularPorCategoria });
