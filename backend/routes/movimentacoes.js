@@ -25,6 +25,37 @@ router.get("/", (req, res) => {
   res.json(dados.movimentacoes);
 });
 
+// GET /api/movimentacoes/stats — totais do mês e ano atuais (para o Dashboard)
+router.get("/stats", (req, res) => {
+  const dados = carregar();
+  const agora = new Date();
+  const mesAtual = agora.getMonth() + 1; // 1-12
+  const anoAtual = agora.getFullYear();
+
+  let entradasMes = 0;
+  let saidasMes = 0;
+
+  dados.movimentacoes.forEach(m => {
+    if (m.tipo === "adj") return;
+    // formato esperado: "DD/MM/YYYY HH:MM" ou "DD/MM/YYYY"
+    const partes = m.at.split(/[\/\s:]/);
+    if (partes.length < 3) return;
+    const mes = parseInt(partes[1], 10);
+    const ano = parseInt(partes[2], 10);
+    if (mes !== mesAtual || ano !== anoAtual) return;
+    const qty = Math.abs(m.qty);
+    if (m.tipo === "in")  entradasMes += qty;
+    if (m.tipo === "out") saidasMes  += qty;
+  });
+
+  res.json({
+    entradasMes,
+    saidasMes,
+    mes: mesAtual,
+    ano: anoAtual
+  });
+});
+
 // POST /api/movimentacoes — registrar entrada ou saída
 router.post("/", (req, res) => {
   const dados = carregar();

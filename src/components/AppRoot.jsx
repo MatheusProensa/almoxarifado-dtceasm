@@ -86,6 +86,7 @@ function Shell() {
   const [bulkIds, setBulkIds] = React.useState([]);
   const [materiais, setMateriais] = React.useState([]);
   const [movs, setMovs] = React.useState([]);
+  const [statsKpis, setStatsKpis] = React.useState({ entradasMes: 0, saidasMes: 0 });
   const [config, setConfig] = React.useState(null);
   const [carregando, setCarregando] = React.useState(true);
   const [erroConexao, setErroConexao] = React.useState(false);
@@ -96,10 +97,11 @@ function Shell() {
 
   // Carregar dados do backend ao iniciar
   React.useEffect(() => {
-    Promise.all([api.getMateriais(), api.getMovimentacoes(), api.getConfig()])
-      .then(([mats, movimentos, cfg]) => {
+    Promise.all([api.getMateriais(), api.getMovimentacoes(), api.getConfig(), api.getMovimentacoesStats()])
+      .then(([mats, movimentos, cfg, stats]) => {
         setMateriais(mats);
         setMovs(movimentos);
+        setStatsKpis(stats);
         setConfig(cfg);
         // Atualiza globals usados pelos componentes
         window.CATEGORIAS = cfg.categorias;
@@ -154,12 +156,15 @@ function Shell() {
     crit: materiais.filter(m => m.status === "crit" || m.status === "zero").length,
   };
 
+  const atualizarStats = () => api.getMovimentacoesStats().then(setStatsKpis).catch(() => {});
+
   const submitMovement = ({ tipo, sku, mat, qty, resp, doc, dest, obs }) => {
     const code = sku || mat;
     api.postMovimentacao({ tipo, sku: code, qty, resp, doc, dest, obs })
       .then(({ movimentacao, material }) => {
         setMateriais(prev => prev.map(m => m.sku === material.sku ? material : m));
         setMovs(prev => [movimentacao, ...prev]);
+        atualizarStats();
         toast({ title: tipo === "in" ? "Entrada registrada" : "Saída registrada", desc: qty + " " + material.unit + " · " + material.name, tone: tipo === "in" ? "success" : "info" });
         setModal(null);
       })
@@ -246,7 +251,7 @@ function Shell() {
           perfil={config && config.perfil} />
         <main ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 26px 44px" }}>
           <div style={{ maxWidth: 1340, margin: "0 auto" }}>
-            {view === "dashboard" && <Dashboard materiais={materiais} alertas={alertas} movs={movs} openModal={openModal} setView={setView} toast={toast} />}
+            {view === "dashboard" && <Dashboard materiais={materiais} alertas={alertas} movs={movs} statsKpis={statsKpis} openModal={openModal} setView={setView} toast={toast} />}
             {view === "materiais" && <Materiais materiais={materiais} loading={loadingMat} initialQ={matInitialQ} onNew={() => openModal("new")} openModal={openModal} onEdit={openEdit} onDelete={deleteMaterial} toast={toast} onBulkOut={ids => { setBulkIds(ids); setModal("bulk"); }} />}
             {view === "entradas" && <MovementScreen tipo="in" materiais={materiais} onSubmit={submitMovement} onAdjust={submitUpdateQty} />}
             {view === "saidas" && <MovementScreen tipo="out" materiais={materiais} onSubmit={submitMovement} onAdjust={submitUpdateQty} />}
