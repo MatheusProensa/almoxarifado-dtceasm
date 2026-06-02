@@ -25,19 +25,19 @@ router.get("/", (req, res) => {
   res.json(dados.movimentacoes);
 });
 
-// GET /api/movimentacoes/stats — totais do mês e ano atuais (para o Dashboard)
+// GET /api/movimentacoes/stats — totais do mês atual (exclui anuladas e estornos)
 router.get("/stats", (req, res) => {
   const dados = carregar();
   const agora = new Date();
-  const mesAtual = agora.getMonth() + 1; // 1-12
+  const mesAtual = agora.getMonth() + 1;
   const anoAtual = agora.getFullYear();
 
   let entradasMes = 0;
   let saidasMes = 0;
 
   dados.movimentacoes.forEach(m => {
-    if (m.tipo === "adj") return;
-    // formato esperado: "DD/MM/YYYY HH:MM" ou "DD/MM/YYYY"
+    if (m.tipo === "adj" || m.tipo === "estorno") return;
+    if (m.anulada) return; // exclui movimentações anuladas
     const partes = m.at.split(/[\/\s:]/);
     if (partes.length < 3) return;
     const mes = parseInt(partes[1], 10);
@@ -45,15 +45,10 @@ router.get("/stats", (req, res) => {
     if (mes !== mesAtual || ano !== anoAtual) return;
     const qty = Math.abs(m.qty);
     if (m.tipo === "in")  entradasMes += qty;
-    if (m.tipo === "out") saidasMes  += qty;
+    if (m.tipo === "out") saidasMes   += qty;
   });
 
-  res.json({
-    entradasMes,
-    saidasMes,
-    mes: mesAtual,
-    ano: anoAtual
-  });
+  res.json({ entradasMes, saidasMes, mes: mesAtual, ano: anoAtual });
 });
 
 // POST /api/movimentacoes — registrar entrada ou saída
@@ -75,13 +70,10 @@ router.post("/", (req, res) => {
 
   const mov = {
     id: dados.proximoId++,
-    tipo,
-    sku,
+    tipo, sku,
     item: mat.name,
-    qty: n,
-    unit: mat.unit,
-    antes,
-    depois,
+    qty: n, unit: mat.unit,
+    antes, depois,
     resp: resp || "2S Geraldo",
     doc: doc || "—",
     dest: dest || "",
@@ -113,13 +105,10 @@ router.post("/ajuste", (req, res) => {
   if (diff !== 0) {
     const mov = {
       id: dados.proximoId++,
-      tipo: "adj",
-      sku,
+      tipo: "adj", sku,
       item: mat.name,
-      qty: diff,
-      unit: mat.unit,
-      antes,
-      depois,
+      qty: diff, unit: mat.unit,
+      antes, depois,
       resp: "2S Geraldo",
       doc: motivo || "Ajuste manual",
       dest: "",
@@ -130,6 +119,59 @@ router.post("/ajuste", (req, res) => {
 
   salvar(dados);
   res.json({ material: { ...mat, status: statusOf(mat.qty, mat.min) } });
+});
+
+// POST /api/movimentacoes/:id/anular — anula uma movimentação criando estorno
+router.post("/:id/anular", (req, res) => {
+  const dados = carregar();
+  const id = parseInt(req.params.id, 10);
+  const idx = dados.movimentacoes.findIndex(m => m.id === id);
+
+  if (idx === -1) return res.status(404).json({ erro: "Movimentação não encontrada" });
+
+  const mov = dados.movimentacoes[idx];
+
+  if (mov.anulada)          return res.status(400).json({ erro: "Esta movimentação já foi anulada" });
+  if (mov.tipo === "estorno") return res.status(400).json({ erro: "Não é possível anular um estorno" });
+
+  const mat = dados.materiais.find(m => m.sku === mov.sku);
+  const antesQty = mat ? mat.qty : 0;
+
+  // Ajusta o estoque revertendo o efeito original
+  if (mat) {
+    if (mov.tipo === "in")  mat.qty = Math.max(0, mat.qty - Math.abs(mov.qty));
+    if (mov.tipo === "out") mat.qty = mat.qty + Math.abs(mov.qty);
+    if (mov.tipo === "adj") mat.qty = Math.max(0, mat.qty - mov.qty);
+  }
+  const depoisQty = mat ? mat.qty : 0;
+
+  // Cria a movimentação de estorno
+  const estorno = {
+    id: dados.proximoId++,
+    tipo: "estorno",
+    sku: mov.sku,
+    item: mov.item,
+    qty: Math.abs(mov.qty),
+    unit: mov.unit,
+    antes: antesQty,
+    depois: depoisQty,
+    resp: req.body.resp || mov.resp,
+    doc: `Estorno ref. #${mov.id}`,
+    dest: "",
+    at: dataHoraAgora(),
+    refId: mov.id
+  };
+
+  // Marca a original como anulada
+  dados.movimentacoes[idx].anulada = true;
+  dados.movimentacoes.unshift(estorno);
+
+  salvar(dados);
+  res.json({
+    estorno,
+    movimentacaoOriginal: dados.movimentacoes.find(m => m.id === id),
+    material: mat ? { ...mat, status: statusOf(mat.qty, mat.min) } : null
+  });
 });
 
 module.exports = router;

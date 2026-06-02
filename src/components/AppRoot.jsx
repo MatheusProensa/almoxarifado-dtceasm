@@ -158,6 +158,21 @@ function Shell() {
 
   const atualizarStats = () => api.getMovimentacoesStats().then(setStatsKpis).catch(() => {});
 
+  const anularMovimentacao = (id) => {
+    api.anularMovimentacao(id)
+      .then(({ estorno, movimentacaoOriginal, material }) => {
+        setMovs(prev => {
+          const sem = prev.filter(m => m.id !== id);
+          const original = { ...movimentacaoOriginal };
+          return [estorno, original, ...sem.filter(m => m.id !== id)];
+        });
+        if (material) setMateriais(prev => prev.map(m => m.sku === material.sku ? material : m));
+        atualizarStats();
+        toast({ title: "Movimentação anulada", desc: `Estorno #${id} registrado`, tone: "warn" });
+      })
+      .catch(err => toast({ title: "Erro ao anular", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
+  };
+
   const submitMovement = ({ tipo, sku, mat, qty, resp, doc, dest, obs }) => {
     const code = sku || mat;
     api.postMovimentacao({ tipo, sku: code, qty, resp, doc, dest, obs })
@@ -255,7 +270,7 @@ function Shell() {
             {view === "materiais" && <Materiais materiais={materiais} loading={loadingMat} initialQ={matInitialQ} onNew={() => openModal("new")} openModal={openModal} onEdit={openEdit} onDelete={deleteMaterial} toast={toast} onBulkOut={ids => { setBulkIds(ids); setModal("bulk"); }} />}
             {view === "entradas" && <MovementScreen tipo="in" materiais={materiais} onSubmit={submitMovement} onAdjust={submitUpdateQty} />}
             {view === "saidas" && <MovementScreen tipo="out" materiais={materiais} onSubmit={submitMovement} onAdjust={submitUpdateQty} />}
-            {(view === "movimentacao" || view === "historico") && <Historico movs={movs} initialTab={histFilter} />}
+            {(view === "movimentacao" || view === "historico") && <Historico movs={movs} initialTab={histFilter} onAnular={anularMovimentacao} />}
             {view === "relatorios" && <Relatorios materiais={materiais} movs={movs} alertas={alertas} />}
             {view === "categorias" && <Cadastros materiais={materiais} toast={toast} config={config} onConfigChange={updateConfig} onChange={() => api.getMateriais().then(setMateriais)} />}
             {view === "config" && <Configuracoes theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")} toast={toast} config={config} onConfigChange={updateConfig} setView={setView} />}
