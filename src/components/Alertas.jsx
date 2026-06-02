@@ -4,7 +4,7 @@
 
 function AlertCard({ m, onAct }) {
   const s = STATUS[m.status];
-  const c = CATEGORIAS[m.cat];
+  const c = getCat(m.cat);
   const pct = Math.round((m.qty / m.min) * 100);
   const msg = m.status === "zero" ? "Item zerado — reposição urgente"
     : m.status === "crit" ? "Nível crítico — abaixo de 50% do mínimo"
@@ -72,9 +72,6 @@ function Alertas({ alertas, toast, openModal }) {
         <div>
           <h2 style={{ font: "700 21px/1.1 var(--font-sans)", letterSpacing: "-0.025em", color: "var(--fg-1)" }}>Central de alertas</h2>
           <p style={{ font: "400 13px/1 var(--font-sans)", color: "var(--fg-3)", marginTop: 6 }}>{alertas.length} itens exigem atenção · priorizados por gravidade e cobertura de estoque.</p>
-        </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <Button variant="secondary" icon="Settings2">Regras de alerta</Button>
         </div>
       </div>
 

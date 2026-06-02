@@ -307,7 +307,12 @@ function SectionLabel({ children, action }) {
   );
 }
 
+const CAT_FALLBACK = { label: "Sem categoria", color: "var(--fg-4)", icon: "Package" };
+function getCat(cat) {
+  return (window.CATEGORIAS && window.CATEGORIAS[cat]) || CAT_FALLBACK;
+}
+
 Object.assign(window, {
-  STATUS, MOVTYPE, statusOf, Button, IconButton, Badge, StatusPill, Card, Input,
+  STATUS, MOVTYPE, statusOf, getCat, Button, IconButton, Badge, StatusPill, Card, Input,
   Segmented, Avatar, EmptyState, ToastProvider, useToast, Divider, SectionLabel,
 });

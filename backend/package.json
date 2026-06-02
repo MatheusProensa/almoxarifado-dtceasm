@@ -1,0 +1,14 @@
+{
+  "name": "almox-proensa-backend",
+  "version": "1.0.0",
+  "description": "Servidor backend do sistema de almoxarifado DTCEA-SM",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}

@@ -20,7 +20,7 @@ function FilterChip({ label, value, active, onClick }) {
 }
 
 function CatCell({ cat }) {
-  const c = CATEGORIAS[cat];
+  const c = getCat(cat);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
       <span style={{ width: 22, height: 22, borderRadius: 6, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 14%, transparent)`, color: c.color }}>
@@ -45,8 +45,9 @@ function StockBar({ qty, min }) {
   );
 }
 
-function Materiais({ materiais, loading, onNew, openModal, onEdit, onDelete, toast }) {
-  const [q, setQ] = React.useState("");
+function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit, onDelete, toast }) {
+  const [q, setQ] = React.useState(initialQ);
+  React.useEffect(() => { setQ(initialQ); }, [initialQ]);
   const [cat, setCat] = React.useState(null);
   const [stat, setStat] = React.useState(null);
   const [sel, setSel] = React.useState(new Set());
@@ -97,12 +98,12 @@ function Materiais({ materiais, loading, onNew, openModal, onEdit, onDelete, toa
             { value: "zero", label: "Zerado", count: statCounts.zero },
           ]}
           value={stat} onChange={setStat} />
-        <FilterChip label="Categoria" value={cat ? CATEGORIAS[cat].label : null} active={!!cat}
+        <FilterChip label="Categoria" value={cat ? getCat(cat).label : null} active={!!cat}
           onClick={() => { const keys = [null, ...Object.keys(CATEGORIAS)]; setCat(keys[(keys.indexOf(cat) + 1) % keys.length]); }} />
         <div style={{ flex: 1 }} />
         <Button variant="secondary" size="sm" icon="Download" onClick={() => {
           const head = ["Material", "Categoria", "Unidade", "Estoque atual", "Estoque minimo", "Status", "Localizacao"];
-          const lines = filtered.map(m => [m.name, CATEGORIAS[m.cat].label, m.unit, m.qty, m.min, STATUS[m.status].label, m.loc]);
+          const lines = filtered.map(m => [m.name, getCat(m.cat).label, m.unit, m.qty, m.min, STATUS[m.status].label, m.loc]);
           window.downloadCSV("materiais", [head, ...lines]);
           toast({ title: "Lista exportada", desc: filtered.length + " materiais no CSV", tone: "success" });
         }}>Exportar</Button>
@@ -143,7 +144,7 @@ function Materiais({ materiais, loading, onNew, openModal, onEdit, onDelete, toa
                 ? Array.from({ length: 9 }).map((_, i) => <SkeletonRow key={i} />)
                 : filtered.length === 0
                   ? <tr><td colSpan={8}><EmptyState icon="PackageSearch" title="Nenhum material encontrado" desc="Ajuste os filtros ou o termo de busca para ver resultados." action={<Button variant="secondary" size="sm" icon="RotateCcw" onClick={() => { setQ(""); setCat(null); setStat(null); }}>Limpar filtros</Button>} /></td></tr>
-                  : filtered.map(m => (
+                  : filtered.map((m) => (
                     <Row key={m.id} m={m} selected={sel.has(m.id)} onToggle={() => toggle(m.id)}
                       menuOpen={menuId === m.id} onMenu={() => setMenuId(menuId === m.id ? null : m.id)}
                       onAction={(type) => { setMenuId(null); if (type === "in" || type === "out") openModal(type, m.sku); else if (type === "edit") onEdit(m); else if (type === "delete") onDelete(m); }} />
@@ -168,6 +169,22 @@ function Materiais({ materiais, loading, onNew, openModal, onEdit, onDelete, toa
 
 function Row({ m, selected, onToggle, menuOpen, onMenu, onAction }) {
   const [hover, setHover] = React.useState(false);
+  const [menuPos, setMenuPos] = React.useState({ top: 0, right: 0 });
+  const btnRef = React.useRef(null);
+
+  const handleMenu = () => {
+    if (!menuOpen && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      const menuH = 160;
+      const abreParaCima = r.bottom + menuH > window.innerHeight;
+      setMenuPos({
+        top: abreParaCima ? r.top - menuH : r.bottom + 4,
+        right: window.innerWidth - r.right,
+      });
+    }
+    onMenu();
+  };
+
   return (
     <tr onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{ background: selected ? "var(--brand-tint)" : (hover ? "var(--bg-3)" : "transparent"), transition: "background var(--dur-fast)" }}>
@@ -187,16 +204,17 @@ function Row({ m, selected, onToggle, menuOpen, onMenu, onAction }) {
       <Td align="right"><span style={{ font: "500 12.5px/1 var(--font-mono)", color: "var(--fg-3)" }}>{m.min} {m.unit}</span></Td>
       <Td><StatusPill status={m.status} /></Td>
       <Td>
-        <div style={{ position: "relative" }}>
-          <IconButton name="MoreHorizontal" size={16} onClick={onMenu} active={menuOpen} />
-          {menuOpen && (
-            <div style={{ position: "absolute", right: 0, top: 38, zIndex: 20, minWidth: 180, padding: 6, background: "var(--bg-3)", border: "1px solid var(--line-2)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-pop)", animation: "popIn var(--dur-fast) var(--ease-out) both" }}>
+        <div ref={btnRef}>
+          <IconButton name="MoreHorizontal" size={16} onClick={handleMenu} active={menuOpen} />
+          {menuOpen && ReactDOM.createPortal(
+            <div style={{ position: "fixed", top: menuPos.top, right: menuPos.right, zIndex: 999, minWidth: 180, padding: 6, background: "var(--bg-3)", border: "1px solid var(--line-2)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-pop)", animation: "popIn var(--dur-fast) var(--ease-out) both" }}>
               <MenuItem icon="ArrowDownToLine" label="Registrar entrada" onClick={() => onAction("in")} />
               <MenuItem icon="ArrowUpFromLine" label="Registrar saída" onClick={() => onAction("out")} />
               <div style={{ height: 1, background: "var(--line-1)", margin: "5px 4px" }} />
               <MenuItem icon="Pencil" label="Editar material" onClick={() => onAction("edit")} />
               <MenuItem icon="Trash2" label="Excluir" danger onClick={() => onAction("delete")} />
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </Td>

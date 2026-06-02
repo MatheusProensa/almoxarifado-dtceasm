@@ -3,6 +3,7 @@ import "./reactGlobal";
 import "./index.css";
 
 // Componentes (cada arquivo registra suas funções em window.*)
+import "./components/api.js";
 import "./components/Icons.jsx";
 import "./components/Primitives.jsx";
 import "./components/data.jsx";

@@ -2,7 +2,7 @@
    Screens.jsx — telas dedicadas: Entrada, Saída, Histórico, Relatórios
    ========================================================================== */
 
-const HOJE_ISO = "2026-05-31";
+const HOJE_ISO = new Date().toISOString().slice(0, 10);
 function brToDate(s) { // "31/05/2026 14:38" -> Date
   const [d, t] = s.split(" ");
   const [dd, mm, yy] = d.split("/").map(Number);
@@ -58,12 +58,12 @@ function MovementScreen({ tipo: tipoProp, materiais, onSubmit, onAdjust }) {
 
           {mat && (
             <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 15px", background: "var(--bg-inset)", border: "1px solid var(--line-1)", borderRadius: "var(--r-md)" }}>
-              <span style={{ width: 38, height: 38, borderRadius: "var(--r-sm)", display: "grid", placeItems: "center", background: `color-mix(in srgb, ${CATEGORIAS[mat.cat].color} 14%, transparent)`, color: CATEGORIAS[mat.cat].color }}>
-                <Icon name={CATEGORIAS[mat.cat].icon} size={18} />
+              <span style={{ width: 38, height: 38, borderRadius: "var(--r-sm)", display: "grid", placeItems: "center", background: `color-mix(in srgb, ${getCat(mat.cat).color} 14%, transparent)`, color: getCat(mat.cat).color }}>
+                <Icon name={getCat(mat.cat).icon} size={18} />
               </span>
               <div style={{ flex: 1 }}>
                 <div style={{ font: "600 13.5px/1.2 var(--font-sans)", color: "var(--fg-1)" }}>{mat.name}</div>
-                <div style={{ font: "500 11.5px/1 var(--font-sans)", color: "var(--fg-3)", marginTop: 4 }}>{CATEGORIAS[mat.cat].label} · Local {mat.loc}</div>
+                <div style={{ font: "500 11.5px/1 var(--font-sans)", color: "var(--fg-3)", marginTop: 4 }}>{getCat(mat.cat).label} · Local {mat.loc}</div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ font: "700 18px/1 var(--font-sans)", color: STATUS[mat.status].color }}>{mat.qty} <span style={{ font: "500 11px/1 var(--font-sans)", color: "var(--fg-3)" }}>{mat.unit}</span></div>
@@ -155,7 +155,7 @@ function Historico({ movs, initialTab = "all" }) {
   const [q, setQ] = React.useState("");
   const [per, setPer] = React.useState("all");
 
-  const ref = brToDate("31/05/2026 23:59");
+  const ref = new Date();
   const dias = { "15d": 15, "1m": 30, "3m": 90, "1a": 365 }[per];
   const rows = movs.filter(m => {
     if (tipo !== "all" && m.tipo !== tipo) return false;
@@ -248,11 +248,11 @@ function HTd({ children, align = "left", style = {} }) { return <td style={{ tex
    ========================================================================= */
 function Relatorios({ materiais, movs, alertas }) {
   const [per, setPer] = React.useState("1m");
-  const [ini, setIni] = React.useState("2026-05-01");
+  const [ini, setIni] = React.useState(() => { const d = new Date(); d.setDate(1); return d.toISOString().slice(0, 10); });
   const [fim, setFim] = React.useState(HOJE_ISO);
   const toast = useToast();
 
-  const ref = brToDate("31/05/2026 23:59");
+  const ref = new Date();
   const dias = { "15d": 15, "1m": 30, "3m": 90, "1a": 365 }[per];
   const inPeriodo = (m) => {
     const d = brToDate(m.at);
@@ -286,7 +286,7 @@ function Relatorios({ materiais, movs, alertas }) {
   const fOut = movF.filter(m => m.tipo === "out").reduce((s, m) => s + Math.abs(m.qty), 0);
   const fAdj = movF.filter(m => m.tipo === "adj").length;
   const anyFilter = !!(matFilter || tipoF !== "all" || catF || setorF || respF || docF);
-  const filterDesc = [matObj && ("Material: " + matObj.name), tipoF !== "all" && ("Tipo: " + MOVTYPE[tipoF].label), catF && ("Categoria: " + CATEGORIAS[catF].label), setorF && ("Seção/setor: " + setorF), respF && ("Responsável: " + respF), docF && ("Documento: " + docF)].filter(Boolean).join("  ·  ");
+  const filterDesc = [matObj && ("Material: " + matObj.name), tipoF !== "all" && ("Tipo: " + MOVTYPE[tipoF].label), catF && ("Categoria: " + getCat(catF).label), setorF && ("Seção/setor: " + setorF), respF && ("Responsável: " + respF), docF && ("Documento: " + docF)].filter(Boolean).join("  ·  ");
 
   const estoqueAtual = materiais.reduce((s, m) => s + m.qty, 0);
   const entradasP = movP.filter(m => m.tipo === "in").reduce((s, m) => s + Math.abs(m.qty), 0);
@@ -321,7 +321,7 @@ function Relatorios({ materiais, movs, alertas }) {
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           <h2 style={{ font: "700 24px/1.1 var(--font-sans)", letterSpacing: "-0.025em", color: "var(--fg-1)" }}>Relatórios</h2>
-          <p style={{ font: "400 13.5px/1.4 var(--font-sans)", color: "var(--fg-3)", marginTop: 5 }}>Estoque e movimentações por período · gerado em 31/05/2026.</p>
+          <p style={{ font: "400 13.5px/1.4 var(--font-sans)", color: "var(--fg-3)", marginTop: 5 }}>Estoque e movimentações por período · gerado em {new Date().toLocaleDateString("pt-BR")}.</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <Button variant="secondary" icon="Download" onClick={exportCSV}>Exportar CSV</Button>
@@ -456,15 +456,13 @@ function ReportSheet({ materiais, movP, perLabel, entradasP, saidasP, ajustesP, 
   return (
     <div id="print-report" style={{ width: "100%", padding: 0, background: "#fff", color: ink, fontFamily: "var(--font-sans)" }}>
       {/* cabeçalho */}
-      <div style={{ paddingBottom: 12, borderBottom: "2px solid " + brand }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src="/assets/dtcea-sm-logo.png" alt="" style={{ width: 44, height: 52, objectFit: "contain" }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ font: "800 14px/1.25 var(--font-sans)", letterSpacing: "-0.01em", color: ink }}>DTCEA-SM — Destacamento de Controle do Espaço Aéreo de Santa Maria</div>
-            <div style={{ font: "600 9.5px/1.3 var(--font-sans)", color: mut, letterSpacing: "0.05em", marginTop: 5 }}>CINDACTA II · SEÇÃO DE SUPRIMENTO · ALMOXARIFADO</div>
-          </div>
+      <div style={{ paddingBottom: 12, borderBottom: "2px solid " + brand, textAlign: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7 }}>
+          <img src="../../assets/dtcea-sm-logo.png" alt="" style={{ width: 42, height: 50, objectFit: "contain" }} />
+          <div style={{ font: "800 14px/1.25 var(--font-sans)", letterSpacing: "-0.01em", color: ink }}>Destacamento de Controle do Espaço Aéreo de Santa Maria</div>
+          <div style={{ font: "600 9.5px/1.3 var(--font-sans)", color: mut, letterSpacing: "0.05em" }}>SEÇÃO DE SUPRIMENTO · ALMOXARIFADO</div>
         </div>
-        <div style={{ textAlign: "center", marginTop: 14 }}>
+        <div style={{ marginTop: 12 }}>
           <div style={{ font: "800 15px/1.2 var(--font-sans)", color: brand, letterSpacing: "0.03em" }}>RELATÓRIO DE MOVIMENTO DE ESTOQUE</div>
           <div style={{ font: "500 10px/1.4 var(--font-sans)", color: mut, marginTop: 6 }}>Período: {perLabel} · Gerado em 31/05/2026</div>
           {filterDesc && <div style={{ font: "600 9.5px/1.4 var(--font-sans)", color: brand, marginTop: 5 }}>Filtros aplicados — {filterDesc}</div>}
@@ -479,26 +477,7 @@ function ReportSheet({ materiais, movP, perLabel, entradasP, saidasP, ajustesP, 
       </div>
 
       {/* reposição (só no relatório geral, sem filtros) */}
-      {!filterDesc && (<>
-      <div style={{ font: "700 11px/1 var(--font-sans)", color: ink, margin: "18px 0 6px" }}>Itens que precisam de reposição ({repor.length})</div>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead><tr><th style={th}>Material</th><th style={th}>Categoria</th><th style={{ ...th, textAlign: "right" }}>Atual</th><th style={{ ...th, textAlign: "right" }}>Mínimo</th><th style={th}>Status</th><th style={th}>Local</th></tr></thead>
-        <tbody>
-          {repor.map((m, i) => (
-            <tr key={m.id} style={{ background: i % 2 ? "#f6f8fb" : "#fff", breakInside: "avoid" }}>
-              <td style={td}>{m.name}</td>
-              <td style={{ ...td, color: mut }}>{CATEGORIAS[m.cat].label}</td>
-              <td style={{ ...td, textAlign: "right", fontWeight: 700, color: STC[m.status].c }}>{m.qty} {m.unit}</td>
-              <td style={{ ...td, textAlign: "right", color: mut }}>{m.min} {m.unit}</td>
-              <td style={{ ...td, fontWeight: 700, color: STC[m.status].c }}>{STC[m.status].l}</td>
-              <td style={{ ...td, color: mut }}>{m.loc}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      </>)}
-
-      {/* movimentações */}
+      {/* movimentações (foco do relatório) */}
       <div style={{ font: "700 11px/1 var(--font-sans)", color: ink, margin: "18px 0 6px" }}>{filterDesc ? "Movimentações filtradas" : "Movimentações do período"} ({movP.length})</div>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead><tr><th style={th}>Data</th><th style={th}>Tipo</th><th style={th}>Material</th><th style={{ ...th, textAlign: "right" }}>Qtde</th><th style={{ ...th, textAlign: "right" }}>Saldo final</th><th style={th}>Responsável</th><th style={th}>Doc/Destino</th></tr></thead>
@@ -517,8 +496,28 @@ function ReportSheet({ materiais, movP, perLabel, entradasP, saidasP, ajustesP, 
         </tbody>
       </table>
 
+      {/* reposição — apenas no relatório geral (sem filtros), após as movimentações */}
+      {!filterDesc && (<>
+      <div style={{ font: "700 11px/1 var(--font-sans)", color: ink, margin: "22px 0 6px" }}>Itens que precisam de reposição ({repor.length})</div>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead><tr><th style={th}>Material</th><th style={th}>Categoria</th><th style={{ ...th, textAlign: "right" }}>Atual</th><th style={{ ...th, textAlign: "right" }}>Mínimo</th><th style={th}>Status</th><th style={th}>Local</th></tr></thead>
+        <tbody>
+          {repor.map((m, i) => (
+            <tr key={m.id} style={{ background: i % 2 ? "#f6f8fb" : "#fff", breakInside: "avoid" }}>
+              <td style={td}>{m.name}</td>
+              <td style={{ ...td, color: mut }}>{getCat(m.cat).label}</td>
+              <td style={{ ...td, textAlign: "right", fontWeight: 700, color: STC[m.status].c }}>{m.qty} {m.unit}</td>
+              <td style={{ ...td, textAlign: "right", color: mut }}>{m.min} {m.unit}</td>
+              <td style={{ ...td, fontWeight: 700, color: STC[m.status].c }}>{STC[m.status].l}</td>
+              <td style={{ ...td, color: mut }}>{m.loc}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </>)}
+
       <div style={{ marginTop: 22, paddingTop: 10, borderTop: "1px solid " + line, font: "400 8.5px/1.4 var(--font-sans)", color: mut, textAlign: "center" }}>
-        Documento gerado pelo sistema de controle de almoxarifado do DTCEA-SM · CINDACTA II. Materiais recebidos via GFM/GMM (Guia de Fornecimento de Material).
+        Documento gerado pelo sistema de controle de almoxarifado do DTCEA-SM | Almox Proensa
       </div>
     </div>
   );
@@ -554,7 +553,7 @@ function downloadCSV(name, rows) {
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = `${name}-${HOJE_ISO}.csv`;
+  a.href = url; a.download = `${name}-${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -572,19 +571,25 @@ function CadRowActions({ onEdit, onDel }) {
   );
 }
 
-function Cadastros({ materiais, toast, onChange }) {
-  const cats = Object.entries(CATEGORIAS).map(([id, c]) => ({ id, label: c.label, color: c.color, icon: c.icon }));
-  const unids = UNIDADES.map(code => ({ id: code, code, label: (window.UNID_LABELS && window.UNID_LABELS[code]) || code }));
-  const [locais, setLocais] = React.useState(() => {
-    const seen = {}; materiais.forEach(m => { seen[(m.loc || "—").charAt(0)] = true; });
-    return Object.keys(seen).sort().map(c => ({ id: c, code: c, desc: "Corredor " + c }));
-  });
+function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
+  const categorias = (config && config.categorias) || window.CATEGORIAS || {};
+  const unidades = (config && config.unidades) || window.UNIDADES || [];
+  const locais = (config && config.locais) || [];
+
+  const cats = Object.entries(categorias).map(([id, c]) => ({ id, label: c.label, color: c.color, icon: c.icon }));
+  const unids = unidades.map(code => ({ id: code, code, label: (window.UNID_LABELS && window.UNID_LABELS[code]) || code }));
+
   const [editing, setEditing] = React.useState(null);
   const [f, setF] = React.useState({});
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
 
   const catCount = id => materiais.filter(m => m.cat === id).length;
   const locCount = code => materiais.filter(m => (m.loc || "").charAt(0) === code).length;
+
+  const salvarConfig = (novasCats, novasUnids, novosLocais) => {
+    if (!config || !onConfigChange) return;
+    onConfigChange({ ...config, categorias: novasCats, unidades: novasUnids, locais: novosLocais });
+  };
 
   const openNew = type => { setF(type === "cat" ? { label: "", icon: "Package", color: CAD_COLORS[0] } : type === "unid" ? { code: "", label: "" } : { code: "", desc: "" }); setEditing({ type, item: null }); };
   const openEdit = (type, item) => { setF({ ...item }); setEditing({ type, item }); };
@@ -594,21 +599,27 @@ function Cadastros({ materiais, toast, onChange }) {
     const { type, item } = editing;
     if (type === "cat") {
       if (!f.label) return;
-      if (item) Object.assign(CATEGORIAS[item.id], { label: f.label, icon: f.icon, color: f.color });
-      else CATEGORIAS["cat" + Date.now()] = { label: f.label, icon: f.icon, color: f.color };
+      const novasCats = { ...categorias };
+      if (item) novasCats[item.id] = { label: f.label, icon: f.icon, color: f.color };
+      else novasCats["cat" + Date.now()] = { label: f.label, icon: f.icon, color: f.color };
+      salvarConfig(novasCats, unidades, locais);
       onChange && onChange();
     } else if (type === "unid") {
       if (!f.code) return;
+      let novasUnids = [...unidades];
+      if (item) { const i = novasUnids.indexOf(item.code); if (i >= 0) novasUnids[i] = f.code; }
+      else if (!novasUnids.includes(f.code)) novasUnids.push(f.code);
       if (!window.UNID_LABELS) window.UNID_LABELS = {};
-      if (item) { const i = UNIDADES.indexOf(item.code); if (i >= 0) UNIDADES[i] = f.code; }
-      else if (!UNIDADES.includes(f.code)) UNIDADES.push(f.code);
       window.UNID_LABELS[f.code] = f.label || f.code;
+      salvarConfig(categorias, novasUnids, locais);
       onChange && onChange();
     } else {
       if (!f.code) return;
       const code = f.code.toUpperCase();
-      if (item) setLocais(ls => ls.map(l => l.id === item.id ? { ...l, code, desc: f.desc || ("Corredor " + code) } : l));
-      else setLocais(ls => [...ls, { id: "l" + Date.now(), code, desc: f.desc || ("Corredor " + code) }]);
+      let novosLocais;
+      if (item) novosLocais = locais.map(l => l.id === item.id ? { ...l, code, desc: f.desc || ("Corredor " + code) } : l);
+      else novosLocais = [...locais, { id: "l" + Date.now(), code, desc: f.desc || ("Corredor " + code) }];
+      salvarConfig(categorias, unidades, novosLocais);
     }
     toast({ title: item ? "Cadastro atualizado" : "Cadastro criado", tone: "success" });
     close();
@@ -617,13 +628,16 @@ function Cadastros({ materiais, toast, onChange }) {
     if (type === "cat") {
       if (materiais.filter(m => m.cat === item.id).length > 0) { toast({ title: "Não foi possível excluir", desc: "Há materiais nesta categoria.", tone: "warn" }); return; }
       if (!window.confirm(`Excluir a categoria "${item.label}"?`)) return;
-      delete CATEGORIAS[item.id]; onChange && onChange();
+      const novasCats = { ...categorias }; delete novasCats[item.id];
+      salvarConfig(novasCats, unidades, locais);
+      onChange && onChange();
     } else if (type === "unid") {
       if (!window.confirm(`Excluir a unidade "${item.code}"?`)) return;
-      const i = UNIDADES.indexOf(item.code); if (i >= 0) UNIDADES.splice(i, 1); onChange && onChange();
+      salvarConfig(categorias, unidades.filter(u => u !== item.code), locais);
+      onChange && onChange();
     } else {
       if (!window.confirm(`Excluir "${item.desc}"?`)) return;
-      setLocais(ls => ls.filter(l => l.id !== item.id));
+      salvarConfig(categorias, unidades, locais.filter(l => l.id !== item.id));
     }
     toast({ title: "Excluído", desc: item.label || item.desc || item.code, tone: "warn" });
   };
@@ -680,7 +694,7 @@ function Cadastros({ materiais, toast, onChange }) {
         <Card pad={20}>
           {secHead("Locais de estoque", "Corredores · padrão Corredor-Prateleira-Nível (ex.: A-01-2)", "local")}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
-            {locais.map(l => (
+            {(locais || []).map(l => (
               <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 10px 10px 13px", background: "var(--bg-inset)", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)" }}>
                 <span style={{ width: 34, height: 34, borderRadius: "var(--r-sm)", display: "grid", placeItems: "center", background: "var(--bg-4)", color: "var(--fg-1)", font: "700 15px/1 var(--font-sans)", flexShrink: 0 }}>{l.code}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -734,11 +748,18 @@ function Cadastros({ materiais, toast, onChange }) {
   );
 }
 
-function Configuracoes({ theme, onToggleTheme, toast, onChange, setView }) {
-  const P = window.PROFILE || { name: "2S Geraldo", role: "Encarregado do almoxarifado · Seção de Suprimento", unit: "DTCEA-SM" };
+function Configuracoes({ theme, onToggleTheme, toast, config, onConfigChange, setView }) {
+  const P = (config && config.perfil) || window.PROFILE || { name: "2S Geraldo", role: "Encarregado do almoxarifado · Seção de Suprimento", unit: "DTCEA-SM" };
   const [editP, setEditP] = React.useState(false);
   const [pf, setPf] = React.useState({ name: P.name, role: P.role });
-  const savePf = () => { window.PROFILE = { ...P, name: pf.name, role: pf.role }; setEditP(false); onChange && onChange(); toast({ title: "Perfil atualizado", tone: "success" }); };
+  React.useEffect(() => { setPf({ name: P.name, role: P.role }); }, [config]);
+  const savePf = () => {
+    const novoPerfil = { ...P, name: pf.name, role: pf.role };
+    window.PROFILE = novoPerfil;
+    if (config && onConfigChange) onConfigChange({ ...config, perfil: novoPerfil });
+    setEditP(false);
+    toast({ title: "Perfil atualizado", tone: "success" });
+  };
   const Sec = ({ icon, title, desc, children, color = "var(--brand-600)" }) => (
     <Card pad={20}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
@@ -783,7 +804,7 @@ function Configuracoes({ theme, onToggleTheme, toast, onChange, setView }) {
 
       <Sec icon="Info" title="Sobre o sistema" desc="Informações e versão" color="#6B7A90">
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src="/assets/dtcea-sm-logo.png" alt="" style={{ width: 40, height: 47, objectFit: "contain" }} />
+          <img src="../../assets/dtcea-sm-logo.png" alt="" style={{ width: 40, height: 47, objectFit: "contain" }} />
           <div style={{ flex: 1, font: "400 12.5px/1.6 var(--font-sans)", color: "var(--fg-2)" }}>
             Sistema de almoxarifado e controle de estoque do <b>DTCEA-SM</b> · CINDACTA II.<br />
             Versão 1.0 · Desenvolvido por <b>Matheus Proensa</b> (Cb Proensa · ex-DTCEA-SM).
