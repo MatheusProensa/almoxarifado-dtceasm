@@ -42,6 +42,14 @@ const api = {
     });
     return r.json();
   },
+  async anularMovimentacao(id) {
+    const r = await fetch(`${BASE}/movimentacoes/${id}/anular`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    return r.json();
+  },
   async postAjuste(dados) {
     const r = await fetch(`${BASE}/movimentacoes/ajuste`, {
       method: "POST",

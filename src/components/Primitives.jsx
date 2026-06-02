@@ -18,9 +18,10 @@ function statusOf(qty, min) {
 
 /* ---- Tipo de movimentação ------------------------------------------------ */
 const MOVTYPE = {
-  in:  { label: "Entrada", color: "var(--ok-500)",    tint: "var(--ok-tint)",    icon: "ArrowDownLeft",  sign: "+" },
-  out: { label: "Saída",   color: "var(--warn-500)",  tint: "var(--warn-tint)",  icon: "ArrowUpRight",   sign: "−" },
-  adj: { label: "Ajuste",  color: "var(--brand-600)", tint: "var(--brand-tint)", icon: "SlidersHorizontal", sign: "" },
+  in:      { label: "Entrada",  color: "var(--ok-500)",      tint: "var(--ok-tint)",      icon: "ArrowDownLeft",     sign: "+" },
+  out:     { label: "Saída",    color: "var(--warn-500)",    tint: "var(--warn-tint)",    icon: "ArrowUpRight",      sign: "−" },
+  adj:     { label: "Ajuste",   color: "var(--brand-600)",   tint: "var(--brand-tint)",   icon: "SlidersHorizontal", sign: "" },
+  estorno: { label: "Estorno",  color: "var(--danger-500)",  tint: "var(--danger-tint)",  icon: "Undo2",             sign: "↺" },
 };
 
 /* ---- Button -------------------------------------------------------------- */

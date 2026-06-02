@@ -148,7 +148,7 @@ function MovementScreen({ tipo: tipoProp, materiais, onSubmit, onAdjust }) {
 /* ===========================================================================
    Histórico de movimentações (tabela com filtros + saldo ant/final)
    ========================================================================= */
-function Historico({ movs, initialTab = "all" }) {
+function Historico({ movs, initialTab = "all", onAnular }) {
   const [tipo, setTipo] = React.useState(initialTab);
   React.useEffect(() => { setTipo(initialTab); }, [initialTab]);
   const [resp, setResp] = React.useState("");
@@ -214,24 +214,49 @@ function Historico({ movs, initialTab = "all" }) {
               <tr>
                 <HTh style={{ paddingLeft: 20 }}>Data</HTh><HTh>Tipo</HTh><HTh>Material</HTh>
                 <HTh align="right">Qtde</HTh><HTh align="right">Saldo ant.</HTh><HTh align="right">Saldo final</HTh>
-                <HTh>Responsável</HTh><HTh style={{ paddingRight: 20 }}>Doc/Destino</HTh>
+                <HTh>Responsável</HTh><HTh>Doc/Destino</HTh><HTh style={{ width: 36, paddingRight: 12 }}></HTh>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0
-                ? <tr><td colSpan={8}><div style={{ padding: 40, textAlign: "center", color: "var(--fg-3)", font: "400 13px var(--font-sans)" }}>Nenhuma movimentação para os filtros selecionados.</div></td></tr>
+                ? <tr><td colSpan={9}><div style={{ padding: 40, textAlign: "center", color: "var(--fg-3)", font: "400 13px var(--font-sans)" }}>Nenhuma movimentação para os filtros selecionados.</div></td></tr>
                 : (pageSize === 0 ? rows : rows.slice(page * pageSize, (page + 1) * pageSize)).map(m => {
-                  const t = MOVTYPE[m.tipo];
+                  const t = MOVTYPE[m.tipo] || MOVTYPE.adj;
+                  const podeAnular = !m.anulada && m.tipo !== "estorno" && onAnular;
+                  const rowOpacity = m.anulada ? 0.5 : 1;
                   return (
-                    <tr key={m.id} className="rowh">
-                      <HTd style={{ paddingLeft: 20 }}><span style={{ font: "500 12px/1 var(--font-sans)", color: "var(--fg-2)", whiteSpace: "nowrap" }}>{m.at}</span></HTd>
-                      <HTd><span style={{ display: "inline-flex", alignItems: "center", gap: 5, height: 22, padding: "0 9px", borderRadius: "var(--r-xs)", background: t.tint, color: t.color, font: "600 11.5px/1 var(--font-sans)", border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}><Icon name={t.icon} size={12} stroke={2.3} />{t.label}</span></HTd>
-                      <HTd><div style={{ font: "600 12.5px/1.2 var(--font-sans)", color: "var(--fg-1)" }}>{m.item}</div></HTd>
+                    <tr key={m.id} className="rowh" style={{ opacity: rowOpacity, background: m.anulada ? "color-mix(in srgb, var(--danger-500) 4%, transparent)" : undefined }}>
+                      <HTd style={{ paddingLeft: 20 }}>
+                        <span style={{ font: "500 12px/1 var(--font-sans)", color: "var(--fg-2)", whiteSpace: "nowrap" }}>{m.at}</span>
+                      </HTd>
+                      <HTd>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, height: 22, padding: "0 9px", borderRadius: "var(--r-xs)", background: t.tint, color: t.color, font: "600 11.5px/1 var(--font-sans)", border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}>
+                            <Icon name={t.icon} size={12} stroke={2.3} />{t.label}
+                          </span>
+                          {m.anulada && <span style={{ font: "600 10px/1 var(--font-sans)", color: "var(--danger-500)", background: "var(--danger-tint)", padding: "2px 6px", borderRadius: 4, border: "1px solid color-mix(in srgb, var(--danger-500) 25%, transparent)" }}>ANULADA</span>}
+                          {m.tipo === "estorno" && m.refId && <span style={{ font: "500 10px/1 var(--font-sans)", color: "var(--fg-3)" }}>ref. #{m.refId}</span>}
+                        </div>
+                      </HTd>
+                      <HTd><div style={{ font: "600 12.5px/1.2 var(--font-sans)", color: m.anulada ? "var(--fg-3)" : "var(--fg-1)", textDecoration: m.anulada ? "line-through" : "none" }}>{m.item}</div></HTd>
                       <HTd align="right"><span style={{ font: "600 13px/1 var(--font-sans)", color: t.color }}>{t.sign}{Math.abs(m.qty)} <span style={{ color: "var(--fg-4)", fontWeight: 500 }}>{m.unit}</span></span></HTd>
                       <HTd align="right"><span style={{ font: "500 12.5px/1 var(--font-sans)", color: "var(--fg-3)" }}>{m.antes ?? "—"}</span></HTd>
                       <HTd align="right"><span style={{ font: "600 12.5px/1 var(--font-sans)", color: "var(--fg-1)" }}>{m.depois ?? "—"}</span></HTd>
                       <HTd><span style={{ font: "500 12px/1 var(--font-sans)", color: "var(--fg-2)" }}>{m.resp}</span></HTd>
-                      <HTd style={{ paddingRight: 20 }}><span style={{ font: "500 11.5px/1 var(--font-sans)", color: "var(--fg-3)" }}>{m.dest || m.doc || "—"}</span></HTd>
+                      <HTd style={{ paddingRight: 8 }}><span style={{ font: "500 11.5px/1 var(--font-sans)", color: "var(--fg-3)" }}>{m.dest || m.doc || "—"}</span></HTd>
+                      <HTd style={{ paddingRight: 12, width: 36 }}>
+                        {podeAnular && (
+                          <button onClick={() => {
+                            if (window.confirm(`Anular a movimentação #${m.id} de "${m.item}"?\nIsso criará um estorno e ajustará o estoque.`))
+                              onAnular(m.id);
+                          }} title="Anular esta movimentação"
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "transparent", cursor: "pointer", color: "var(--fg-3)" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "var(--danger-tint)"; e.currentTarget.style.color = "var(--danger-500)"; e.currentTarget.style.borderColor = "color-mix(in srgb, var(--danger-500) 30%, transparent)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--fg-3)"; e.currentTarget.style.borderColor = "var(--line-2)"; }}>
+                            <Icon name="Undo2" size={13} stroke={2.2} />
+                          </button>
+                        )}
+                      </HTd>
                     </tr>
                   );
                 })}

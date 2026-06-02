@@ -159,7 +159,8 @@
       "loc": "A-05-1",
       "qty": 5,
       "unit": "un",
-      "min": 6
+      "min": 6,
+      "status": "baixa"
     },
     {
       "id": 1017,
@@ -267,9 +268,10 @@
       "name": "Álcool etílico hidratado 70° (garrafa 1L)",
       "cat": "lmp",
       "loc": "B-01-1",
-      "qty": 2,
+      "qty": 124,
       "unit": "un",
-      "min": 12
+      "min": 12,
+      "status": "ok"
     },
     {
       "id": 1028,
@@ -586,6 +588,52 @@
   ],
   "movimentacoes": [
     {
+      "id": 2014,
+      "tipo": "estorno",
+      "sku": "EXP16",
+      "item": "Bloco adesivo amarelo 76 x 102 mm",
+      "qty": 2,
+      "unit": "un",
+      "antes": 3,
+      "depois": 5,
+      "resp": "Proensa",
+      "doc": "Estorno ref. #2013",
+      "dest": "",
+      "at": "02/06/2026 17:00",
+      "refId": 2013
+    },
+    {
+      "id": 2013,
+      "tipo": "out",
+      "sku": "EXP16",
+      "item": "Bloco adesivo amarelo 76 x 102 mm",
+      "qty": 2,
+      "unit": "un",
+      "antes": 5,
+      "depois": 3,
+      "resp": "Proensa",
+      "doc": "TWR",
+      "dest": "TWR",
+      "obs": "teste",
+      "at": "02/06/2026 16:55",
+      "anulada": true
+    },
+    {
+      "id": 2012,
+      "tipo": "in",
+      "sku": "LMP01",
+      "item": "Álcool etílico hidratado 70° (garrafa 1L)",
+      "qty": 122,
+      "unit": "un",
+      "antes": 2,
+      "depois": 124,
+      "resp": "2S Friedrich",
+      "doc": "—",
+      "dest": "",
+      "obs": "teste",
+      "at": "02/06/2026 16:55"
+    },
+    {
       "id": 1,
       "tipo": "out",
       "sku": "EXP17",
@@ -726,7 +774,7 @@
       "at": "26/05/2026 09:48"
     }
   ],
-  "proximoId": 2012,
+  "proximoId": 2015,
   "config": {
     "perfil": {
       "name": "Suprimenro",
