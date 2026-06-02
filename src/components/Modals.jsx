@@ -210,6 +210,9 @@ function AddMaterialModal({ open, onClose, onSubmit }) {
   const [f, setF] = React.useState(blank);
   React.useEffect(() => { if (open) setF(blank); }, [open]);
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
+  const qty = parseInt(f.qty, 10) || 0;
+  const min = parseInt(f.min, 10) || 0;
+  const alertaImediato = f.min && f.qty && min > 0 && qty < min;
   const ready = f.name && f.cat && f.min;
   return (
     <Modal open={open} onClose={onClose} icon="PackagePlus" iconColor="var(--brand-600)" width={540}
@@ -217,7 +220,7 @@ function AddMaterialModal({ open, onClose, onSubmit }) {
       footer={<>
         <Button variant="ghost" onClick={onClose}>Cancelar</Button>
         <Button variant="primary" icon="Check" disabled={!ready}
-          onClick={() => onSubmit({ ...f, qty: parseInt(f.qty, 10) || 0, min: parseInt(f.min, 10) || 0 })}>Salvar material</Button>
+          onClick={() => onSubmit({ ...f, qty, min })}>Salvar material</Button>
       </>}>
       <MField label="Nome do material" required hint="Nomenclatura conforme a GFM (Guia de Fornecimento de Material)"><MText value={f.name} onChange={v => set("name", v)} placeholder="Ex.: Cabo coaxial RG-213/U" /></MField>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
@@ -230,6 +233,14 @@ function AddMaterialModal({ open, onClose, onSubmit }) {
         <MField label="Quantidade inicial"><MText value={f.qty} onChange={v => set("qty", v)} placeholder="0" type="number" /></MField>
         <MField label="Estoque mínimo" required><MText value={f.min} onChange={v => set("min", v)} placeholder="0" type="number" /></MField>
       </div>
+      {alertaImediato && (
+        <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 13px", background: "var(--warn-tint, color-mix(in srgb, #F59E0B 12%, transparent))", border: "1px solid color-mix(in srgb, #F59E0B 30%, transparent)", borderRadius: "var(--r-sm)" }}>
+          <Icon name="TriangleAlert" size={15} style={{ color: "#F59E0B", flexShrink: 0 }} />
+          <span style={{ font: "500 12px/1.4 var(--font-sans)", color: "#92610A" }}>
+            A quantidade inicial ({qty}) está abaixo do mínimo ({min}) — este material já entrará como alerta de estoque.
+          </span>
+        </div>
+      )}
       <MField label="Localização física" hint="Corredor-Prateleira-Nível"><MText value={f.loc} onChange={v => set("loc", v.toUpperCase())} placeholder="B-04-2" /></MField>
       <MField label="Observações">
         <textarea value={f.obs} onChange={e => set("obs", e.target.value)} placeholder="Notas, especificações, fornecedor preferencial…" rows={2}
