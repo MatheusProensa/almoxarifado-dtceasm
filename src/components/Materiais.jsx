@@ -52,6 +52,8 @@ function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit
   const [stat, setStat] = React.useState(null);
   const [sel, setSel] = React.useState(new Set());
   const [menuId, setMenuId] = React.useState(null);
+  const [pageSize, setPageSize] = React.useState(15);
+  const [page, setPage] = React.useState(0);
 
   const filtered = materiais.filter(m => {
     if (cat && m.cat !== cat) return false;
@@ -62,6 +64,14 @@ function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit
     }
     return true;
   }).sort((a, b) => a.name.localeCompare(b.name, "pt"));
+
+  // Reset page quando filtros mudam
+  React.useEffect(() => { setPage(0); }, [q, cat, stat, pageSize]);
+
+  const totalPages = pageSize === 0 ? 1 : Math.ceil(filtered.length / pageSize);
+  const paginated = pageSize === 0 ? filtered : filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const inicio = pageSize === 0 ? 1 : page * pageSize + 1;
+  const fim = pageSize === 0 ? filtered.length : Math.min((page + 1) * pageSize, filtered.length);
 
   const statCounts = { ok: 0, baixa: 0, crit: 0, zero: 0 };
   materiais.forEach(m => statCounts[m.status]++);
@@ -103,10 +113,10 @@ function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit
         <div style={{ flex: 1 }} />
         <Button variant="secondary" size="sm" icon="Download" onClick={() => {
           const head = ["Material", "Categoria", "Unidade", "Estoque atual", "Estoque minimo", "Status", "Localizacao"];
-          const lines = filtered.map(m => [m.name, getCat(m.cat).label, m.unit, m.qty, m.min, STATUS[m.status].label, m.loc]);
+          const lines = materiais.map(m => [m.name, getCat(m.cat).label, m.unit, m.qty, m.min, STATUS[m.status].label, m.loc]);
           window.downloadCSV("materiais", [head, ...lines]);
-          toast({ title: "Lista exportada", desc: filtered.length + " materiais no CSV", tone: "success" });
-        }}>Exportar</Button>
+          toast({ title: "Lista exportada", desc: materiais.length + " materiais no CSV", tone: "success" });
+        }}>Exportar CSV</Button>
       </div>
 
       {/* bulk bar */}
@@ -144,7 +154,7 @@ function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit
                 ? Array.from({ length: 9 }).map((_, i) => <SkeletonRow key={i} />)
                 : filtered.length === 0
                   ? <tr><td colSpan={8}><EmptyState icon="PackageSearch" title="Nenhum material encontrado" desc="Ajuste os filtros ou o termo de busca para ver resultados." action={<Button variant="secondary" size="sm" icon="RotateCcw" onClick={() => { setQ(""); setCat(null); setStat(null); }}>Limpar filtros</Button>} /></td></tr>
-                  : filtered.map((m) => (
+                  : paginated.map((m) => (
                     <Row key={m.id} m={m} selected={sel.has(m.id)} onToggle={() => toggle(m.id)}
                       menuOpen={menuId === m.id} onMenu={() => setMenuId(menuId === m.id ? null : m.id)}
                       onAction={(type) => { setMenuId(null); if (type === "in" || type === "out") openModal(type, m.sku); else if (type === "edit") onEdit(m); else if (type === "delete") onDelete(m); }} />
@@ -154,11 +164,27 @@ function Materiais({ materiais, loading, initialQ = "", onNew, openModal, onEdit
         </div>
         {/* pagination */}
         {!loading && filtered.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderTop: "1px solid var(--line-1)" }}>
-            <span style={{ font: "500 12px/1 var(--font-sans)", color: "var(--fg-3)" }}>Mostrando 1–{filtered.length} de {filtered.length}</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderTop: "1px solid var(--line-1)", flexWrap: "wrap", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ font: "500 12px/1 var(--font-sans)", color: "var(--fg-3)" }}>
+                Mostrando {inicio}–{fim} de {filtered.length}
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ font: "500 11.5px/1 var(--font-sans)", color: "var(--fg-3)" }}>por página:</span>
+                {[10, 15, 20, 0].map(n => (
+                  <button key={n} onClick={() => setPageSize(n)}
+                    style={{ height: 26, minWidth: 36, padding: "0 8px", borderRadius: "var(--r-xs)", border: "1px solid", cursor: "pointer", font: "600 11.5px/1 var(--font-sans)",
+                      borderColor: pageSize === n ? "var(--brand-500)" : "var(--line-2)",
+                      background: pageSize === n ? "var(--brand-tint)" : "var(--bg-2)",
+                      color: pageSize === n ? "var(--brand-600)" : "var(--fg-2)" }}>
+                    {n === 0 ? "Todos" : n}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div style={{ display: "flex", gap: 6 }}>
-              <Button size="sm" variant="secondary" icon="ChevronLeft" disabled>Anterior</Button>
-              <Button size="sm" variant="secondary" iconRight="ChevronRight">Próximo</Button>
+              <Button size="sm" variant="secondary" icon="ChevronLeft" disabled={page === 0 || pageSize === 0} onClick={() => setPage(p => p - 1)}>Anterior</Button>
+              <Button size="sm" variant="secondary" iconRight="ChevronRight" disabled={page >= totalPages - 1 || pageSize === 0} onClick={() => setPage(p => p + 1)}>Próximo</Button>
             </div>
           </div>
         )}
