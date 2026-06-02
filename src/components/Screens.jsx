@@ -415,11 +415,11 @@ function Relatorios({ materiais, movs, alertas }) {
               <Lg dot="var(--ok-500)" label="Entradas" /><Lg dot="var(--warn-500)" label="Saídas" />
             </div>
           </div>
-          <FlowChart serie={SERIE} height={230} />
+          <FlowChart serie={calcularSerie(movs)} height={230} />
         </Card>
         <Card pad={20}>
           <h3 style={{ font: "700 15px/1.2 var(--font-sans)", color: "var(--fg-1)", marginBottom: 16 }}>Categorias com maior movimentação</h3>
-          <HBarRank data={MOV_CATEGORIA} color="var(--brand-500)" unit="un" />
+          <HBarRank data={calcularMovCategoria(movP, materiais)} color="var(--brand-500)" unit="un" />
         </Card>
       </div>
 
@@ -430,7 +430,7 @@ function Relatorios({ materiais, movs, alertas }) {
         </Card>
         <Card pad={20}>
           <h3 style={{ font: "700 15px/1.2 var(--font-sans)", color: "var(--fg-1)", marginBottom: 16 }}>Materiais mais retirados</h3>
-          <HBarRank data={MAIS_USADOS} color="#F59E0B" unit="un" />
+          <HBarRank data={calcularMaisUsados(movP, materiais)} color="#F59E0B" unit="un" />
         </Card>
       </div>
       {ReactDOM.createPortal(<ReportSheet materiais={materiais} movP={anyFilter ? movF : movP} perLabel={perLabel} entradasP={entradasP} saidasP={saidasP} ajustesP={ajustesP} filterDesc={anyFilter ? filterDesc : ""} />, document.body)}
