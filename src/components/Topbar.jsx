@@ -145,7 +145,11 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile, p
             {item("LifeBuoy", "Ajuda e guia", () => { setOpen(false); onOpenGuia(); })}
           </div>
           <div style={{ padding: 6, borderTop: "1px solid var(--line-1)" }}>
-            {item("LogOut", "Sair", () => { setOpen(false); toast({ title: "Sessão encerrada", desc: `Até logo, ${P.name}`, tone: "info" }); }, true)}
+            {item("LogOut", "Sair", () => {
+              setOpen(false);
+              toast({ title: "Encerrando sistema…", desc: `Até logo, ${P.name}`, tone: "info" });
+              setTimeout(() => window.close(), 1200);
+            }, true)}
           </div>
         </div>
       )}
