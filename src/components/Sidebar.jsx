@@ -70,6 +70,7 @@ function Sidebar({ view, setView, collapsed, setCollapsed, counts }) {
         <NavGroup title="Gestão" collapsed={collapsed}>
           {I("FileBarChart", "Relatórios", "relatorios")}
           {I("Tags", "Cadastros", "categorias")}
+          {I("Settings", "Configurações", "config")}
         </NavGroup>
       </nav>
 
