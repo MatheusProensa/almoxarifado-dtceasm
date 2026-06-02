@@ -30,6 +30,10 @@ const api = {
     const r = await fetch(`${BASE}/movimentacoes`);
     return r.json();
   },
+  async getMovimentacoesStats() {
+    const r = await fetch(`${BASE}/movimentacoes/stats`);
+    return r.json();
+  },
   async postMovimentacao(dados) {
     const r = await fetch(`${BASE}/movimentacoes`, {
       method: "POST",

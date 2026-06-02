@@ -177,34 +177,18 @@ function calcularPorCategoria(materiais) {
   return Object.entries(totais).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([cat, value]) => ({ cat, value }));
 }
 
-function calcularKpis(movs) {
-  const agora = new Date();
-  const mes = agora.getMonth(); const ano = agora.getFullYear();
-  let entradas = 0, saidas = 0;
-  movs.forEach(m => {
-    if (m.tipo === "adj") return;
-    const p = m.at.split(/[\/ :]/);
-    if (p.length < 3) return;
-    const d = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
-    if (d.getMonth() === mes && d.getFullYear() === ano) {
-      if (m.tipo === "in") entradas += Math.abs(m.qty);
-      else if (m.tipo === "out") saidas += Math.abs(m.qty);
-    }
-  });
-  return { entradas, saidas };
-}
 
-function Dashboard({ materiais, alertas, movs, openModal, setView, toast }) {
+function Dashboard({ materiais, alertas, movs, statsKpis, openModal, setView, toast }) {
   const critCount = alertas.filter(m => m.status === "crit" || m.status === "zero").length;
-  const kpis = React.useMemo(() => calcularKpis(movs), [movs]);
+  const kpis = statsKpis || { entradasMes: 0, saidasMes: 0 };
   const serie = React.useMemo(() => calcularSerie(movs), [movs]);
   const maisUsados = React.useMemo(() => calcularMaisUsados(movs, materiais), [movs, materiais]);
   const porCategoria = React.useMemo(() => calcularPorCategoria(materiais), [materiais]);
 
   const metrics = [
     { key: "estoque", label: "Materiais cadastrados", value: materiais.length, icon: "Boxes", accent: "var(--brand-600)", sub: "Itens no catálogo", link: { label: "Ver materiais", view: "materiais" } },
-    { key: "entrada", label: "Entradas (mês)", value: kpis.entradas, icon: "ArrowDownToLine", accent: "var(--ok-500)", sub: "Unidades recebidas no mês", link: { label: "Ver entradas", view: "movimentacao", filter: "in" } },
-    { key: "saida", label: "Saídas (mês)", value: kpis.saidas, icon: "ArrowUpFromLine", accent: "#F59E0B", sub: "Unidades retiradas no mês", link: { label: "Ver saídas", view: "movimentacao", filter: "out" } },
+    { key: "entrada", label: "Entradas (mês)", value: kpis.entradasMes, icon: "ArrowDownToLine", accent: "var(--ok-500)", sub: "Unidades recebidas no mês", link: { label: "Ver entradas", view: "movimentacao", filter: "in" } },
+    { key: "saida", label: "Saídas (mês)", value: kpis.saidasMes, icon: "ArrowUpFromLine", accent: "#F59E0B", sub: "Unidades retiradas no mês", link: { label: "Ver saídas", view: "movimentacao", filter: "out" } },
     { key: "critico", label: "Itens críticos", value: critCount, icon: "TriangleAlert", accent: "var(--danger-500)", sub: "Precisam de atenção", link: { label: "Ver itens", view: "alertas" } },
   ];
 
