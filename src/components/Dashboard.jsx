@@ -135,9 +135,78 @@ function TdD({ children, align = "left", style = {} }) {
   return <td style={{ textAlign: align, padding: "13px 12px", borderBottom: "1px solid var(--line-1)", verticalAlign: "middle", ...style }}>{children}</td>;
 }
 
+function calcularSerie(movs) {
+  const meses = [];
+  const agora = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+    meses.push({ mes: d.getMonth(), ano: d.getFullYear(), m: d.toLocaleString("pt-BR", { month: "short" }).replace(".", ""), in: 0, out: 0 });
+  }
+  movs.forEach(mv => {
+    if (mv.tipo === "adj") return;
+    const partes = mv.at.split(/[\/ :]/);
+    if (partes.length < 3) return;
+    const d = new Date(Number(partes[2]), Number(partes[1]) - 1, Number(partes[0]));
+    const slot = meses.find(s => s.mes === d.getMonth() && s.ano === d.getFullYear());
+    if (slot) { if (mv.tipo === "in") slot.in += Math.abs(mv.qty); else slot.out += Math.abs(mv.qty); }
+  });
+  return meses;
+}
+
+function calcularMaisUsados(movs, materiais) {
+  const totais = {};
+  movs.filter(m => m.tipo === "out").forEach(m => { totais[m.item] = (totais[m.item] || 0) + Math.abs(m.qty); });
+  return Object.entries(totais).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, value]) => ({ name, value }));
+}
+
+function calcularMovCategoria(movs, materiais) {
+  const skuCat = {}; materiais.forEach(m => { skuCat[m.sku] = m.cat; });
+  const totais = {};
+  movs.filter(m => m.tipo !== "adj").forEach(m => {
+    const cat = skuCat[m.sku];
+    if (!cat) return;
+    const label = getCat(cat).label;
+    totais[label] = (totais[label] || 0) + Math.abs(m.qty);
+  });
+  return Object.entries(totais).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, value]) => ({ name, value }));
+}
+
+function calcularPorCategoria(materiais) {
+  const totais = {};
+  materiais.forEach(m => { totais[m.cat] = (totais[m.cat] || 0) + m.qty; });
+  return Object.entries(totais).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([cat, value]) => ({ cat, value }));
+}
+
+function calcularKpis(movs) {
+  const agora = new Date();
+  const mes = agora.getMonth(); const ano = agora.getFullYear();
+  let entradas = 0, saidas = 0;
+  movs.forEach(m => {
+    if (m.tipo === "adj") return;
+    const p = m.at.split(/[\/ :]/);
+    if (p.length < 3) return;
+    const d = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
+    if (d.getMonth() === mes && d.getFullYear() === ano) {
+      if (m.tipo === "in") entradas += Math.abs(m.qty);
+      else if (m.tipo === "out") saidas += Math.abs(m.qty);
+    }
+  });
+  return { entradas, saidas };
+}
+
 function Dashboard({ materiais, alertas, movs, openModal, setView, toast }) {
   const critCount = alertas.filter(m => m.status === "crit" || m.status === "zero").length;
-  const metrics = METRICS.map(m => m.key === "critico" ? { ...m, value: critCount } : m.key === "estoque" ? { ...m, value: materiais.length } : m);
+  const kpis = React.useMemo(() => calcularKpis(movs), [movs]);
+  const serie = React.useMemo(() => calcularSerie(movs), [movs]);
+  const maisUsados = React.useMemo(() => calcularMaisUsados(movs, materiais), [movs, materiais]);
+  const porCategoria = React.useMemo(() => calcularPorCategoria(materiais), [materiais]);
+
+  const metrics = [
+    { key: "estoque", label: "Materiais cadastrados", value: materiais.length, icon: "Boxes", accent: "var(--brand-600)", sub: "Itens no catálogo", link: { label: "Ver materiais", view: "materiais" } },
+    { key: "entrada", label: "Entradas (mês)", value: kpis.entradas, icon: "ArrowDownToLine", accent: "var(--ok-500)", sub: "Unidades recebidas no mês", link: { label: "Ver entradas", view: "movimentacao", filter: "in" } },
+    { key: "saida", label: "Saídas (mês)", value: kpis.saidas, icon: "ArrowUpFromLine", accent: "#F59E0B", sub: "Unidades retiradas no mês", link: { label: "Ver saídas", view: "movimentacao", filter: "out" } },
+    { key: "critico", label: "Itens críticos", value: critCount, icon: "TriangleAlert", accent: "var(--danger-500)", sub: "Precisam de atenção", link: { label: "Ver itens", view: "alertas" } },
+  ];
 
   return (
     <div className="view-enter" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -178,17 +247,20 @@ function Dashboard({ materiais, alertas, movs, openModal, setView, toast }) {
           <Card pad={20}>
             <CardHead title="Movimentações" subtitle="Entradas e saídas — últimos 6 meses"
               action={<div style={{ display: "flex", gap: 14 }}><Legend dot="var(--ok-500)" label="Entradas" /><Legend dot="var(--warn-500)" label="Saídas" /></div>} />
-            <FlowChart serie={SERIE} height={230} />
+            <FlowChart serie={serie} height={230} />
           </Card>
 
           <Card pad={20}>
             <CardHead title="Categorias" subtitle="Distribuição dos materiais" />
-            <div style={{ paddingTop: 4 }}><Donut data={POR_CATEGORIA} /></div>
+            <div style={{ paddingTop: 4 }}><Donut data={porCategoria} /></div>
           </Card>
 
           <Card pad={20}>
-            <CardHead title="Mais utilizados" subtitle="Saídas no mês por material" />
-            <HBarRank data={MAIS_USADOS} color="var(--brand-500)" unit="un" />
+            <CardHead title="Mais utilizados" subtitle="Saídas registradas por material" />
+            {maisUsados.length > 0
+              ? <HBarRank data={maisUsados} color="var(--brand-500)" unit="un" />
+              : <div style={{ padding: "20px 0", textAlign: "center", font: "400 13px var(--font-sans)", color: "var(--fg-3)" }}>Nenhuma saída registrada ainda.</div>
+            }
           </Card>
         </div>
       </div>
@@ -205,4 +277,4 @@ function Legend({ dot, label }) {
   );
 }
 
-Object.assign(window, { Dashboard });
+Object.assign(window, { Dashboard, calcularSerie, calcularMaisUsados, calcularMovCategoria, calcularPorCategoria, calcularKpis });
