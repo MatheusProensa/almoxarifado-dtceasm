@@ -266,6 +266,29 @@ function Shell() {
     </div>
   );
 
+  const totalAlertas = counts.baixa + counts.crit;
+
+  const MobileNav = () => {
+    const btn = (icon, label, v, badge) => (
+      <button className={"mobile-nav-btn" + (view === v ? " active" : "")} onClick={() => setView(v)}>
+        {badge > 0 && <span className="mobile-nav-badge">{badge > 9 ? "9+" : badge}</span>}
+        <Icon name={icon} size={22} stroke={view === v ? 2.2 : 1.8} />
+        <span className="label">{label}</span>
+      </button>
+    );
+    return (
+      <nav className="mobile-nav" aria-label="Navegação principal">
+        <div className="mobile-nav-inner">
+          {btn("ArrowDownToLine", "Entrada",  "entradas")}
+          {btn("ArrowUpFromLine", "Saída",    "saidas")}
+          {btn("Boxes",           "Materiais","materiais")}
+          {btn("TriangleAlert",   "Alertas",  "alertas", totalAlertas)}
+          {btn("LayoutDashboard", "Início",   "dashboard")}
+        </div>
+      </nav>
+    );
+  };
+
   return (
     <div className="app-shell" style={{ display: "flex", height: "100%", position: "relative" }}>
       <Sidebar view={view} setView={setView} collapsed={collapsed} setCollapsed={setCollapsed} counts={counts} />
@@ -290,6 +313,8 @@ function Shell() {
           </div>
         </main>
       </div>
+
+      <MobileNav />
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} materiais={materiais} setView={setView} onMatSelect={q => setMatInitialQ(q)} />
       <MovementModal open={modal === "in" || modal === "out"} tipo={modal} materiais={materiais} initialSku={preset} onClose={() => setModal(null)} onSubmit={submitMovement} />

@@ -76,7 +76,7 @@ function MovementScreen({ tipo: tipoProp, materiais, onSubmit, onAdjust }) {
 
           {isAdj ? (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="mobile-col1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <MField label="Saldo atual">
                   <div style={{ height: 40, display: "flex", alignItems: "center", padding: "0 12px", background: "var(--bg-inset)", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)", font: "600 14px/1 var(--font-sans)", color: "var(--fg-1)" }}>{mat ? `${mat.qty} ${mat.unit}` : "—"}</div>
                 </MField>
@@ -89,7 +89,7 @@ function MovementScreen({ tipo: tipoProp, materiais, onSubmit, onAdjust }) {
                   <Icon name={diff > 0 ? "TrendingUp" : "TrendingDown"} size={15} />Ajuste de {diff > 0 ? "+" : ""}{diff} {mat.unit} será registrado no histórico
                 </div>
               )}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="mobile-col1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <MField label="Responsável" required>
                   <MSelect value={resp} placeholder="Selecione" onChange={setResp} options={RESPONSAVEIS.map(r => ({ value: r.name, label: r.name }))} />
                 </MField>
@@ -100,7 +100,7 @@ function MovementScreen({ tipo: tipoProp, materiais, onSubmit, onAdjust }) {
             </>
           ) : (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="mobile-col1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <MField label={isIn ? "2 · Quantidade recebida" : "2 · Quantidade retirada"} required hint={mat ? `Em ${mat.unit}` : null}>
                   <MText value={qty} onChange={setQty} placeholder="0" type="number" />
                 </MField>
@@ -115,7 +115,7 @@ function MovementScreen({ tipo: tipoProp, materiais, onSubmit, onAdjust }) {
                   <span style={{ font: "500 12.5px/1.4 var(--font-sans)", color: "var(--danger-500)" }}>Quantidade maior que o saldo disponível (<b>{mat.qty} {mat.unit}</b>). Reduza a quantidade ou registre uma entrada antes.</span>
                 </div>
               )}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="mobile-col1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {isIn
                   ? <MField label="Responsável" required><MSelect value={resp} placeholder="Selecione" onChange={setResp} options={RESPONSAVEIS.map(r => ({ value: r.name, label: r.name }))} /></MField>
                   : <MField label="Militar (quem retirou)" required><MText value={resp} onChange={setResp} placeholder="Nome do militar" /></MField>}
@@ -136,7 +136,7 @@ function MovementScreen({ tipo: tipoProp, materiais, onSubmit, onAdjust }) {
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20, paddingTop: 18, borderTop: "1px solid var(--line-1)" }}>
           <Button variant="ghost" onClick={reset}>Limpar</Button>
-          <Button variant={isIn || isAdj ? "primary" : "gold"} size="lg" icon={HEAD.icon} disabled={!ready} onClick={confirm}>
+          <Button className="btn-confirm" variant={isIn || isAdj ? "primary" : "gold"} size="lg" icon={HEAD.icon} disabled={!ready} onClick={confirm}>
             {isAdj ? "Confirmar ajuste" : isIn ? "Confirmar entrada" : "Confirmar saída"}
           </Button>
         </div>

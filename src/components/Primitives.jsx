@@ -25,7 +25,7 @@ const MOVTYPE = {
 };
 
 /* ---- Button -------------------------------------------------------------- */
-function Button({ children, variant = "secondary", size = "md", icon, iconRight, onClick, full, disabled, style = {} }) {
+function Button({ children, variant = "secondary", size = "md", icon, iconRight, onClick, full, disabled, style = {}, className }) {
   const [hover, setHover] = React.useState(false);
   const [press, setPress] = React.useState(false);
   const sizes = {
@@ -69,6 +69,7 @@ function Button({ children, variant = "secondary", size = "md", icon, iconRight,
   };
   return (
     <button
+      className={className}
       style={{ ...base, ...variants[variant] }}
       onClick={disabled ? undefined : onClick}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => { setHover(false); setPress(false); }}
