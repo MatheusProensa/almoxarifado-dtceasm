@@ -58,12 +58,16 @@ router.get("/stats", (req, res) => {
 router.post("/", (req, res) => {
   const db = getDb();
   const { tipo, sku, qty, resp, doc, dest, obs } = req.body;
-  if (!tipo || !sku || !qty) return res.status(400).json({ erro: "tipo, sku e qty são obrigatórios" });
 
-  const mat = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(sku);
-  if (!mat) return res.status(404).json({ erro: "Material não encontrado" });
+  if (!tipo || !["in", "out"].includes(tipo)) return res.status(400).json({ erro: "Tipo deve ser 'in' ou 'out'." });
+  if (!sku || typeof sku !== "string" || sku.trim().length === 0) return res.status(400).json({ erro: "SKU é obrigatório." });
 
-  const n = Math.abs(parseInt(qty, 10));
+  const n = parseInt(qty, 10);
+  if (!qty || isNaN(n) || n <= 0 || n > 9_999_999) return res.status(400).json({ erro: "Quantidade deve ser um número inteiro positivo." });
+
+  const mat = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(sku.trim());
+  if (!mat) return res.status(404).json({ erro: "Material não encontrado." });
+
   const antes = mat.qty;
   const depois = tipo === "in" ? antes + n : Math.max(0, antes - n);
 
@@ -74,14 +78,14 @@ router.post("/", (req, res) => {
     INSERT INTO movimentacoes (id, tipo, sku, item, qty, unit, antes, depois, resp, doc, dest, obs, at)
     VALUES (@id, @tipo, @sku, @item, @qty, @unit, @antes, @depois, @resp, @doc, @dest, @obs, @at)
   `).run({
-    id, tipo, sku,
+    id, tipo, sku: sku.trim(),
     item: mat.name,
     qty: n, unit: mat.unit,
     antes, depois,
-    resp: resp || (req.user ? req.user.name : "Sistema"),
-    doc: doc || "—",
-    dest: dest || "",
-    obs: obs || "",
+    resp: resp ? String(resp).slice(0, 80) : (req.user ? req.user.name : "Sistema"),
+    doc:  doc  ? String(doc).slice(0, 80)  : "—",
+    dest: dest ? String(dest).slice(0, 60) : "",
+    obs:  obs  ? String(obs).slice(0, 300) : "",
     at: dataHoraAgora()
   });
 
@@ -97,13 +101,18 @@ router.post("/", (req, res) => {
 router.post("/ajuste", (req, res) => {
   const db = getDb();
   const { sku, novoQty, motivo } = req.body;
-  if (!sku || novoQty === undefined) return res.status(400).json({ erro: "sku e novoQty são obrigatórios" });
 
-  const mat = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(sku);
-  if (!mat) return res.status(404).json({ erro: "Material não encontrado" });
+  if (!sku || typeof sku !== "string") return res.status(400).json({ erro: "SKU é obrigatório." });
+  if (novoQty === undefined || novoQty === null) return res.status(400).json({ erro: "novoQty é obrigatório." });
+
+  const novo = Number(novoQty);
+  if (isNaN(novo) || novo < 0 || novo > 9_999_999) return res.status(400).json({ erro: "Quantidade inválida." });
+
+  const mat = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(sku.trim());
+  if (!mat) return res.status(404).json({ erro: "Material não encontrado." });
 
   const antes = mat.qty;
-  const depois = Math.max(0, Number(novoQty));
+  const depois = novo;
   const diff = depois - antes;
 
   db.prepare("UPDATE materiais SET qty = ? WHERE sku = ?").run(depois, sku);
@@ -114,12 +123,12 @@ router.post("/ajuste", (req, res) => {
       INSERT INTO movimentacoes (id, tipo, sku, item, qty, unit, antes, depois, resp, doc, dest, at)
       VALUES (@id, @tipo, @sku, @item, @qty, @unit, @antes, @depois, @resp, @doc, @dest, @at)
     `).run({
-      id, tipo: "adj", sku,
+      id, tipo: "adj", sku: sku.trim(),
       item: mat.name,
       qty: diff, unit: mat.unit,
       antes, depois,
       resp: req.user ? req.user.name : "Sistema",
-      doc: motivo || "Ajuste manual",
+      doc: motivo ? String(motivo).slice(0, 80) : "Ajuste manual",
       dest: "",
       at: dataHoraAgora()
     });
@@ -133,11 +142,13 @@ router.post("/ajuste", (req, res) => {
 router.post("/:id/anular", (req, res) => {
   const db = getDb();
   const id = parseInt(req.params.id, 10);
+  if (isNaN(id) || id <= 0) return res.status(400).json({ erro: "ID inválido." });
+
   const mov = db.prepare("SELECT * FROM movimentacoes WHERE id = ?").get(id);
 
-  if (!mov)               return res.status(404).json({ erro: "Movimentação não encontrada" });
-  if (mov.anulada)        return res.status(400).json({ erro: "Esta movimentação já foi anulada" });
-  if (mov.tipo === "estorno") return res.status(400).json({ erro: "Não é possível anular um estorno" });
+  if (!mov)                    return res.status(404).json({ erro: "Movimentação não encontrada." });
+  if (mov.anulada)             return res.status(400).json({ erro: "Esta movimentação já foi anulada." });
+  if (mov.tipo === "estorno")  return res.status(400).json({ erro: "Não é possível anular um estorno." });
 
   const mat = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(mov.sku);
   const antesQty = mat ? mat.qty : 0;
@@ -159,7 +170,7 @@ router.post("/:id/anular", (req, res) => {
     tipo: "estorno", sku: mov.sku, item: mov.item,
     qty: Math.abs(mov.qty), unit: mov.unit,
     antes: antesQty, depois: depoisQty,
-    resp: req.body.resp || mov.resp,
+    resp: req.user ? req.user.name : mov.resp,
     doc: `Estorno ref. #${mov.id}`,
     dest: "",
     at: dataHoraAgora(),

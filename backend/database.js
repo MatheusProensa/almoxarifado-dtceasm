@@ -134,15 +134,28 @@ function criarUsuariosIniciais(db) {
   const hash = bcrypt.hashSync(SENHA_PADRAO, 10);
   const ins = db.prepare("INSERT INTO users (username, password_hash, name, role) VALUES (?,?,?,?)");
 
-  ins.run("geraldo",   hash, "2S Geraldo",   "admin");
-  ins.run("friedrich", hash, "2S Friedrich",  "operador");
-  ins.run("zimmermann", hash, "Cb Zimmermann",  "operador");
+  ins.run("geraldo",    hash, "2S Geraldo",    "admin");
+  ins.run("friedrich",  hash, "2S Friedrich",  "operador");
+  ins.run("zimmermann", hash, "Cb Zimmermann", "operador");
 
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("  Usuários criados com senha padrão:");
-  console.log(`  Senha: ${SENHA_PADRAO}`);
-  console.log("  Logins: geraldo | friedrich | zimmerman");
+  console.log("  Usuários criados. Logins: geraldo | friedrich | zimmermann");
+  console.log("  Altere a senha no primeiro acesso.");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+}
+
+function getJwtSecret() {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+
+  const db = getDb();
+  const row = db.prepare("SELECT valor FROM meta WHERE chave = 'jwt_secret'").get();
+  if (row) return row.valor;
+
+  const crypto = require("crypto");
+  const secret = crypto.randomBytes(48).toString("hex");
+  db.prepare("INSERT INTO meta (chave, valor) VALUES ('jwt_secret', ?)").run(secret);
+  console.log("JWT secret gerado e salvo no banco. Defina JWT_SECRET em variável de ambiente para maior controle.");
+  return secret;
 }
 
 function proximoId() {
@@ -164,4 +177,4 @@ function salvarConfig(cfg) {
   db.prepare("INSERT OR REPLACE INTO config (chave, valor) VALUES ('config', ?)").run(JSON.stringify(cfg));
 }
 
-module.exports = { getDb, proximoId, getConfig, salvarConfig };
+module.exports = { getDb, proximoId, getConfig, salvarConfig, getJwtSecret };
