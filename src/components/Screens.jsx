@@ -874,7 +874,7 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
 }
 
 function Configuracoes({ theme, onToggleTheme, toast, config, onConfigChange, setView }) {
-  const P = (config && config.perfil) || window.PROFILE || { name: "2S Geraldo", role: "Encarregado do almoxarifado · Seção de Suprimento", unit: "DTCEA-SM" };
+  const P = (config && config.perfil) || window.PROFILE || { name: "Suprimento", role: "Administrador · Seção de Suprimento", unit: "DTCEA-SM" };
   const [editP, setEditP] = React.useState(false);
   const [pf, setPf] = React.useState({ name: P.name, role: P.role });
   React.useEffect(() => { setPf({ name: P.name, role: P.role }); }, [config]);

@@ -434,7 +434,7 @@ function NovaMovButton({ onPick }) {
 
 /* ---- Editar perfil -------------------------------------------------------- */
 function EditProfileModal({ open, onClose, config, onSaved }) {
-  const base = (config && config.perfil) || window.PROFILE || { name: "2S Geraldo", role: "Encarregado do almoxarifado" };
+  const base = (config && config.perfil) || window.PROFILE || { name: "Suprimento", role: "Administrador" };
   const [name, setName] = React.useState(base.name);
   const [role, setRole] = React.useState(base.role);
   React.useEffect(() => { if (open) { const p = (config && config.perfil) || window.PROFILE || base; setName(p.name); setRole(p.role); } }, [open, config]);

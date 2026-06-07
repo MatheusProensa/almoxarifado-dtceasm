@@ -100,7 +100,7 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile, p
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
   const dark = theme === "dark";
-  const P = perfil || window.PROFILE || { name: "2S Geraldo", role: "Encarregado" };
+  const P = perfil || window.PROFILE || { name: "Suprimento", role: "Administrador" };
   React.useEffect(() => {
     const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", h);
