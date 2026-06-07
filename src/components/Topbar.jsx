@@ -147,8 +147,12 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile, p
           <div style={{ padding: 6, borderTop: "1px solid var(--line-1)" }}>
             {item("LogOut", "Sair", () => {
               setOpen(false);
-              toast({ title: "Encerrando sistema…", desc: `Até logo, ${P.name}`, tone: "info" });
-              setTimeout(() => window.close(), 1200);
+              toast({ title: "Saindo…", desc: `Até logo, ${P.name}`, tone: "info" });
+              setTimeout(() => {
+                localStorage.removeItem("almox-token");
+                localStorage.removeItem("almox-user");
+                window.dispatchEvent(new Event("almox-logout"));
+              }, 900);
             }, true)}
           </div>
         </div>

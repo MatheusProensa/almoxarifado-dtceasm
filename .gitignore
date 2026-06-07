@@ -7,3 +7,6 @@ dist-ssr
 # Editor
 .vscode/*
 .DS_Store
+backend/almox.db
+backend/almox.db-shm
+backend/almox.db-wal

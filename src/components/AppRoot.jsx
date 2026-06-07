@@ -73,6 +73,7 @@ function ErroConexao() {
 
 function Shell() {
   const toast = useToast();
+  const [autenticado, setAutenticado] = React.useState(() => !!localStorage.getItem("almox-token"));
   const [theme, setTheme] = React.useState(() => localStorage.getItem("almox-theme") || "light");
   const [view, setViewRaw] = React.useState("dashboard");
   const [collapsed, setCollapsed] = React.useState(false);
@@ -95,8 +96,16 @@ function Shell() {
   const [histFilter, setHistFilter] = React.useState("all");
   const scrollRef = React.useRef(null);
 
+  // Ouvir evento de logout (token expirado / 401)
+  React.useEffect(() => {
+    const onLogout = () => setAutenticado(false);
+    window.addEventListener("almox-logout", onLogout);
+    return () => window.removeEventListener("almox-logout", onLogout);
+  }, []);
+
   // Carregar dados do backend ao iniciar
   React.useEffect(() => {
+    if (!autenticado) return;
     Promise.all([api.getMateriais(), api.getMovimentacoes(), api.getConfig(), api.getMovimentacoesStats()])
       .then(([mats, movimentos, cfg, stats]) => {
         setMateriais(mats);
@@ -115,7 +124,7 @@ function Shell() {
         setErroConexao(true);
         setCarregando(false);
       });
-  }, []);
+  }, [autenticado]);
 
   const updateConfig = React.useCallback((novoConfig) => {
     setConfig(novoConfig);
@@ -244,6 +253,8 @@ function Shell() {
       setBulkIds([]);
     }).catch(() => toast({ title: "Erro ao registrar", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
   };
+
+  if (!autenticado) return <Login onLogin={() => setAutenticado(true)} />;
 
   if (erroConexao) return <ErroConexao />;
 

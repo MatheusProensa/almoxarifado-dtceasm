@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { carregar, salvar } = require("../database");
+const { getDb, proximoId } = require("../database");
 
 function statusOf(qty, min) {
   if (qty === 0) return "zero";
@@ -19,15 +19,20 @@ function dataHoraAgora() {
   return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
 }
 
-// GET /api/movimentacoes — listar todas
+function formatarMov(m) {
+  return { ...m, anulada: m.anulada === 1, refId: m.ref_id || undefined };
+}
+
+// GET /api/movimentacoes
 router.get("/", (req, res) => {
-  const dados = carregar();
-  res.json(dados.movimentacoes);
+  const db = getDb();
+  const movs = db.prepare("SELECT * FROM movimentacoes ORDER BY id DESC").all();
+  res.json(movs.map(formatarMov));
 });
 
-// GET /api/movimentacoes/stats — totais do mês atual (exclui anuladas e estornos)
+// GET /api/movimentacoes/stats
 router.get("/stats", (req, res) => {
-  const dados = carregar();
+  const db = getDb();
   const agora = new Date();
   const mesAtual = agora.getMonth() + 1;
   const anoAtual = agora.getFullYear();
@@ -35,142 +40,142 @@ router.get("/stats", (req, res) => {
   let entradasMes = 0;
   let saidasMes = 0;
 
-  dados.movimentacoes.forEach(m => {
-    if (m.tipo === "adj" || m.tipo === "estorno") return;
-    if (m.anulada) return; // exclui movimentações anuladas
+  const movs = db.prepare("SELECT tipo, qty, at FROM movimentacoes WHERE tipo IN ('in','out') AND anulada = 0").all();
+  movs.forEach(m => {
     const partes = m.at.split(/[\/\s:]/);
     if (partes.length < 3) return;
     const mes = parseInt(partes[1], 10);
     const ano = parseInt(partes[2], 10);
     if (mes !== mesAtual || ano !== anoAtual) return;
-    const qty = Math.abs(m.qty);
-    if (m.tipo === "in")  entradasMes += qty;
-    if (m.tipo === "out") saidasMes   += qty;
+    if (m.tipo === "in")  entradasMes += Math.abs(m.qty);
+    if (m.tipo === "out") saidasMes   += Math.abs(m.qty);
   });
 
   res.json({ entradasMes, saidasMes, mes: mesAtual, ano: anoAtual });
 });
 
-// POST /api/movimentacoes — registrar entrada ou saída
+// POST /api/movimentacoes
 router.post("/", (req, res) => {
-  const dados = carregar();
+  const db = getDb();
   const { tipo, sku, qty, resp, doc, dest, obs } = req.body;
-
   if (!tipo || !sku || !qty) return res.status(400).json({ erro: "tipo, sku e qty são obrigatórios" });
 
-  const mat = dados.materiais.find(m => m.sku === sku);
+  const mat = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(sku);
   if (!mat) return res.status(404).json({ erro: "Material não encontrado" });
 
   const n = Math.abs(parseInt(qty, 10));
   const antes = mat.qty;
   const depois = tipo === "in" ? antes + n : Math.max(0, antes - n);
 
-  mat.qty = depois;
-  mat.status = statusOf(depois, mat.min);
+  db.prepare("UPDATE materiais SET qty = ? WHERE sku = ?").run(depois, sku);
 
-  const mov = {
-    id: dados.proximoId++,
-    tipo, sku,
+  const id = proximoId();
+  db.prepare(`
+    INSERT INTO movimentacoes (id, tipo, sku, item, qty, unit, antes, depois, resp, doc, dest, obs, at)
+    VALUES (@id, @tipo, @sku, @item, @qty, @unit, @antes, @depois, @resp, @doc, @dest, @obs, @at)
+  `).run({
+    id, tipo, sku,
     item: mat.name,
     qty: n, unit: mat.unit,
     antes, depois,
-    resp: resp || "2S Geraldo",
+    resp: resp || (req.user ? req.user.name : "Sistema"),
     doc: doc || "—",
     dest: dest || "",
     obs: obs || "",
     at: dataHoraAgora()
-  };
+  });
 
-  dados.movimentacoes.unshift(mov);
-  salvar(dados);
-  res.status(201).json({ movimentacao: mov, material: { ...mat, status: statusOf(mat.qty, mat.min) } });
+  const mov = db.prepare("SELECT * FROM movimentacoes WHERE id = ?").get(id);
+  const matAtualizado = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(sku);
+  res.status(201).json({
+    movimentacao: formatarMov(mov),
+    material: { ...matAtualizado, status: statusOf(matAtualizado.qty, matAtualizado.min) }
+  });
 });
 
-// POST /api/movimentacoes/ajuste — ajuste de estoque
+// POST /api/movimentacoes/ajuste
 router.post("/ajuste", (req, res) => {
-  const dados = carregar();
+  const db = getDb();
   const { sku, novoQty, motivo } = req.body;
-
   if (!sku || novoQty === undefined) return res.status(400).json({ erro: "sku e novoQty são obrigatórios" });
 
-  const mat = dados.materiais.find(m => m.sku === sku);
+  const mat = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(sku);
   if (!mat) return res.status(404).json({ erro: "Material não encontrado" });
 
   const antes = mat.qty;
   const depois = Math.max(0, Number(novoQty));
   const diff = depois - antes;
 
-  mat.qty = depois;
+  db.prepare("UPDATE materiais SET qty = ? WHERE sku = ?").run(depois, sku);
 
   if (diff !== 0) {
-    const mov = {
-      id: dados.proximoId++,
-      tipo: "adj", sku,
+    const id = proximoId();
+    db.prepare(`
+      INSERT INTO movimentacoes (id, tipo, sku, item, qty, unit, antes, depois, resp, doc, dest, at)
+      VALUES (@id, @tipo, @sku, @item, @qty, @unit, @antes, @depois, @resp, @doc, @dest, @at)
+    `).run({
+      id, tipo: "adj", sku,
       item: mat.name,
       qty: diff, unit: mat.unit,
       antes, depois,
-      resp: "2S Geraldo",
+      resp: req.user ? req.user.name : "Sistema",
       doc: motivo || "Ajuste manual",
       dest: "",
       at: dataHoraAgora()
-    };
-    dados.movimentacoes.unshift(mov);
+    });
   }
 
-  salvar(dados);
-  res.json({ material: { ...mat, status: statusOf(mat.qty, mat.min) } });
+  const matAtualizado = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(sku);
+  res.json({ material: { ...matAtualizado, status: statusOf(matAtualizado.qty, matAtualizado.min) } });
 });
 
-// POST /api/movimentacoes/:id/anular — anula uma movimentação criando estorno
+// POST /api/movimentacoes/:id/anular
 router.post("/:id/anular", (req, res) => {
-  const dados = carregar();
+  const db = getDb();
   const id = parseInt(req.params.id, 10);
-  const idx = dados.movimentacoes.findIndex(m => m.id === id);
+  const mov = db.prepare("SELECT * FROM movimentacoes WHERE id = ?").get(id);
 
-  if (idx === -1) return res.status(404).json({ erro: "Movimentação não encontrada" });
-
-  const mov = dados.movimentacoes[idx];
-
-  if (mov.anulada)          return res.status(400).json({ erro: "Esta movimentação já foi anulada" });
+  if (!mov)               return res.status(404).json({ erro: "Movimentação não encontrada" });
+  if (mov.anulada)        return res.status(400).json({ erro: "Esta movimentação já foi anulada" });
   if (mov.tipo === "estorno") return res.status(400).json({ erro: "Não é possível anular um estorno" });
 
-  const mat = dados.materiais.find(m => m.sku === mov.sku);
+  const mat = db.prepare("SELECT * FROM materiais WHERE sku = ?").get(mov.sku);
   const antesQty = mat ? mat.qty : 0;
+  let depoisQty = antesQty;
 
-  // Ajusta o estoque revertendo o efeito original
   if (mat) {
-    if (mov.tipo === "in")  mat.qty = Math.max(0, mat.qty - Math.abs(mov.qty));
-    if (mov.tipo === "out") mat.qty = mat.qty + Math.abs(mov.qty);
-    if (mov.tipo === "adj") mat.qty = Math.max(0, mat.qty - mov.qty);
+    if (mov.tipo === "in")  depoisQty = Math.max(0, mat.qty - Math.abs(mov.qty));
+    if (mov.tipo === "out") depoisQty = mat.qty + Math.abs(mov.qty);
+    if (mov.tipo === "adj") depoisQty = Math.max(0, mat.qty - mov.qty);
+    db.prepare("UPDATE materiais SET qty = ? WHERE sku = ?").run(depoisQty, mov.sku);
   }
-  const depoisQty = mat ? mat.qty : 0;
 
-  // Cria a movimentação de estorno
-  const estorno = {
-    id: dados.proximoId++,
-    tipo: "estorno",
-    sku: mov.sku,
-    item: mov.item,
-    qty: Math.abs(mov.qty),
-    unit: mov.unit,
-    antes: antesQty,
-    depois: depoisQty,
+  const estornoId = proximoId();
+  db.prepare(`
+    INSERT INTO movimentacoes (id, tipo, sku, item, qty, unit, antes, depois, resp, doc, dest, at, ref_id)
+    VALUES (@id, @tipo, @sku, @item, @qty, @unit, @antes, @depois, @resp, @doc, @dest, @at, @ref_id)
+  `).run({
+    id: estornoId,
+    tipo: "estorno", sku: mov.sku, item: mov.item,
+    qty: Math.abs(mov.qty), unit: mov.unit,
+    antes: antesQty, depois: depoisQty,
     resp: req.body.resp || mov.resp,
     doc: `Estorno ref. #${mov.id}`,
     dest: "",
     at: dataHoraAgora(),
-    refId: mov.id
-  };
+    ref_id: mov.id
+  });
 
-  // Marca a original como anulada
-  dados.movimentacoes[idx].anulada = true;
-  dados.movimentacoes.unshift(estorno);
+  db.prepare("UPDATE movimentacoes SET anulada = 1 WHERE id = ?").run(id);
 
-  salvar(dados);
+  const estorno = db.prepare("SELECT * FROM movimentacoes WHERE id = ?").get(estornoId);
+  const movOriginal = db.prepare("SELECT * FROM movimentacoes WHERE id = ?").get(id);
+  const matAtualizado = mat ? db.prepare("SELECT * FROM materiais WHERE sku = ?").get(mov.sku) : null;
+
   res.json({
-    estorno,
-    movimentacaoOriginal: dados.movimentacoes.find(m => m.id === id),
-    material: mat ? { ...mat, status: statusOf(mat.qty, mat.min) } : null
+    estorno: formatarMov(estorno),
+    movimentacaoOriginal: formatarMov(movOriginal),
+    material: matAtualizado ? { ...matAtualizado, status: statusOf(matAtualizado.qty, matAtualizado.min) } : null
   });
 });
 
