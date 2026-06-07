@@ -6,10 +6,8 @@ Set fso   = CreateObject("Scripting.FileSystemObject")
 ' Pasta raiz do projeto (onde este arquivo está)
 pasta = fso.GetParentFolderName(WScript.ScriptFullName)
 
-' Se a pasta dist/ não existir, compila o frontend antes de iniciar
-If Not fso.FolderExists(pasta & "\dist") Then
-    shell.Run "cmd /c cd /d """ & pasta & """ && npm run build", 1, True
-End If
+' Sempre reconstrói o frontend para garantir que a versão mais recente está sendo servida
+shell.Run "cmd /c cd /d """ & pasta & """ && npm run build", 1, True
 
 ' Inicia o servidor (backend + frontend) em segundo plano
 shell.Run "cmd /c cd /d """ & pasta & "\backend"" && node server.js", 0, False
