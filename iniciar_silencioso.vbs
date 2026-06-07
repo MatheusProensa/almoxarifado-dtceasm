@@ -1,17 +1,25 @@
-Dim shell
+Dim shell, fso, pasta
+
 Set shell = CreateObject("WScript.Shell")
+Set fso   = CreateObject("Scripting.FileSystemObject")
 
-' Inicia o servidor backend em segundo plano (sem janela)
-shell.Run "cmd /c node """ & CreateObject("Scripting.FileSystemObject").GetParentFolderName(WScript.ScriptFullName) & "\backend\server.js""", 0, False
+' Pasta raiz do projeto (onde este arquivo está)
+pasta = fso.GetParentFolderName(WScript.ScriptFullName)
 
-' Aguarda 2 segundos para o servidor subir
-WScript.Sleep 2000
+' Se a pasta dist/ não existir, compila o frontend antes de iniciar
+If Not fso.FolderExists(pasta & "\dist") Then
+    shell.Run "cmd /c cd /d """ & pasta & """ && npm run build", 1, True
+End If
 
-' Inicia o front-end em segundo plano (sem janela)
-shell.Run "cmd /c cd /d """ & CreateObject("Scripting.FileSystemObject").GetParentFolderName(WScript.ScriptFullName) & """ && npm run dev", 0, False
+' Inicia o servidor (backend + frontend) em segundo plano
+shell.Run "cmd /c cd /d """ & pasta & "\backend"" && node server.js", 0, False
 
-' Aguarda 3 segundos para o front-end compilar
+' Aguarda o servidor subir
 WScript.Sleep 3000
 
-' Abre o navegador
-shell.Run "http://localhost:5173"
+' Descobre o nome deste computador para mostrar no título
+Dim nomePC
+nomePC = shell.ExpandEnvironmentStrings("%COMPUTERNAME%")
+
+' Abre o sistema no navegador padrão
+shell.Run "http://localhost:3001"

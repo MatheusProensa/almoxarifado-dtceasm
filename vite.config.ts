@@ -11,6 +11,12 @@ export default defineConfig({
   esbuild: {
     jsxInject: `const React = (window).React`,
   },
+  server: {
+    host: true, // aceita conexões de outros PCs na rede (modo dev)
+    proxy: {
+      "/api": "http://localhost:3001", // redireciona /api para o backend
+    },
+  },
   plugins: [
     VitePWA({
       registerType: "autoUpdate",
