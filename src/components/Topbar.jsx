@@ -151,7 +151,7 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile, p
               setTimeout(() => {
                 localStorage.removeItem("almox-token");
                 localStorage.removeItem("almox-user");
-                window.dispatchEvent(new Event("almox-logout"));
+                window.location.reload();
               }, 900);
             }, true)}
           </div>
