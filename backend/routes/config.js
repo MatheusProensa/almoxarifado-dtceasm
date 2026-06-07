@@ -1,27 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const { carregar, salvar } = require("../database");
+const { getConfig, salvarConfig } = require("../database");
 
-// GET /api/config — retorna toda a configuração
+// GET /api/config
 router.get("/", (req, res) => {
-  const dados = carregar();
-  res.json(dados.config);
+  res.json(getConfig());
 });
 
-// PUT /api/config — salva toda a configuração
+// PUT /api/config
 router.put("/", (req, res) => {
-  const dados = carregar();
-  dados.config = { ...dados.config, ...req.body };
-  salvar(dados);
-  res.json(dados.config);
+  const config = { ...getConfig(), ...req.body };
+  salvarConfig(config);
+  res.json(config);
 });
 
-// PUT /api/config/perfil — atualiza só o perfil
+// PUT /api/config/perfil
 router.put("/perfil", (req, res) => {
-  const dados = carregar();
-  dados.config.perfil = { ...dados.config.perfil, ...req.body };
-  salvar(dados);
-  res.json(dados.config.perfil);
+  const config = getConfig();
+  config.perfil = { ...config.perfil, ...req.body };
+  salvarConfig(config);
+  res.json(config.perfil);
 });
 
 module.exports = router;
