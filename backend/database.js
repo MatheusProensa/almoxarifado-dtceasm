@@ -136,7 +136,7 @@ function criarUsuariosIniciais(db) {
 
   ins.run("geraldo",   hash, "2S Geraldo",   "admin");
   ins.run("friedrich", hash, "2S Friedrich",  "operador");
-  ins.run("zimmerman", hash, "Cb Zimmerman",  "operador");
+  ins.run("zimmermann", hash, "Cb Zimmermann",  "operador");
 
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("  Usuários criados com senha padrão:");
