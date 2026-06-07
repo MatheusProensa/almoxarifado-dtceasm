@@ -7,6 +7,7 @@ const materiaisRouter     = require("./routes/materiais");
 const movimentacoesRouter = require("./routes/movimentacoes");
 const configRouter        = require("./routes/config");
 const authRouter          = require("./routes/auth");
+const backupRouter        = require("./routes/backup");
 const auth                = require("./middleware/auth");
 
 const app  = express();
@@ -33,6 +34,7 @@ app.get("/api/status", (req, res) => res.json({ ok: true }));
 app.use("/api/materiais",     auth, materiaisRouter);
 app.use("/api/movimentacoes", auth, movimentacoesRouter);
 app.use("/api/config",        auth, configRouter);
+app.use("/api/backup",        auth, backupRouter);
 
 // Handler de erros — não expõe detalhes ao cliente
 app.use((err, req, res, _next) => {
