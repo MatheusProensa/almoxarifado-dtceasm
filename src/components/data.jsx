@@ -101,7 +101,7 @@ const MATERIAIS = [
 const RESPONSAVEIS = [
   { name: "2S Geraldo",    color: "var(--brand-600)" },
   { name: "2S Friedrich",  color: "#6E5BE0" },
-  { name: "Cb Zimmerman",  color: "var(--warn-500)" },
+  { name: "Cb Zimmermann",  color: "var(--warn-500)" },
 ];
 
 // movimentações — tipo: in | out | adj · com saldo anterior/final
@@ -109,12 +109,12 @@ const MOVIMENTACOES = [
   { id: 1, tipo: "out", sku: "EXP17", item: "Papel sulfite A4 75g (resma)", qty: 12, unit: "rm", antes: 22, depois: 10, resp: "2S Geraldo",  doc: "RM-2026-0481", dest: "APP", at: "31/05/2026 14:38" },
   { id: 2, tipo: "in",  sku: "LMP01", item: "Álcool etílico hidratado 70° (garrafa 1L)", qty: 10, unit: "un", antes: 2, depois: 12, resp: "2S Geraldo", doc: "GFM nº 2210", dest: "", at: "31/05/2026 11:02" },
   { id: 3, tipo: "adj", sku: "EXP09", item: "Clips para papel 2/0 (cx 100)", qty: 1, unit: "cx", antes: 1, depois: 2, resp: "2S Friedrich", doc: "Inventário", dest: "", at: "31/05/2026 09:20" },
-  { id: 4, tipo: "out", sku: "LMP02", item: "Álcool gel 70° glicerinado (galão 5L)", qty: 6, unit: "un", antes: 6, depois: 0, resp: "Cb Zimmerman", doc: "RM-2026-0479", dest: "SMSO", at: "30/05/2026 16:44" },
+  { id: 4, tipo: "out", sku: "LMP02", item: "Álcool gel 70° glicerinado (galão 5L)", qty: 6, unit: "un", antes: 6, depois: 0, resp: "Cb Zimmermann", doc: "RM-2026-0479", dest: "SMSO", at: "30/05/2026 16:44" },
   { id: 5, tipo: "in",  sku: "COP04", item: "Guardanapo de papel 20 x 22 cm (pct 50)", qty: 6, unit: "pct", antes: 4, depois: 10, resp: "2S Friedrich", doc: "GFM nº 2204", dest: "", at: "30/05/2026 13:20" },
-  { id: 6, tipo: "out", sku: "DES03", item: "Saco coletor de lixo preto 100L (pct 100)", qty: 5, unit: "pct", antes: 5, depois: 0, resp: "Cb Zimmerman", doc: "RM-2026-0478", dest: "SMST", at: "30/05/2026 10:05" },
+  { id: 6, tipo: "out", sku: "DES03", item: "Saco coletor de lixo preto 100L (pct 100)", qty: 5, unit: "pct", antes: 5, depois: 0, resp: "Cb Zimmermann", doc: "RM-2026-0478", dest: "SMST", at: "30/05/2026 10:05" },
   { id: 7, tipo: "in",  sku: "HIG02", item: "Papel toalha interfolhado (pct 1000 fls)", qty: 1, unit: "pct", antes: 0, depois: 1, resp: "2S Geraldo", doc: "GFM nº 2198", dest: "", at: "27/05/2026 15:51" },
-  { id: 8, tipo: "out", sku: "COP01", item: "Filtro de café descartável nº 103", qty: 3, unit: "cx", antes: 8, depois: 5, resp: "Cb Zimmerman", doc: "RM-2026-0475", dest: "TWR", at: "27/05/2026 08:32" },
-  { id: 9, tipo: "adj", sku: "FER03", item: "Estopa (kg)", qty: 2, unit: "kg", antes: 7, depois: 9, resp: "Cb Zimmerman", doc: "Correção", dest: "", at: "26/05/2026 17:10" },
+  { id: 8, tipo: "out", sku: "COP01", item: "Filtro de café descartável nº 103", qty: 3, unit: "cx", antes: 8, depois: 5, resp: "Cb Zimmermann", doc: "RM-2026-0475", dest: "TWR", at: "27/05/2026 08:32" },
+  { id: 9, tipo: "adj", sku: "FER03", item: "Estopa (kg)", qty: 2, unit: "kg", antes: 7, depois: 9, resp: "Cb Zimmermann", doc: "Correção", dest: "", at: "26/05/2026 17:10" },
   { id: 10, tipo: "in", sku: "EXP18", item: "Envelope pardo 229 x 324 mm", qty: 1, unit: "pct", antes: 0, depois: 1, resp: "2S Friedrich", doc: "GFM nº 2185", dest: "", at: "26/05/2026 09:48" },
 ];
 

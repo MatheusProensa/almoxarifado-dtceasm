@@ -863,7 +863,7 @@ function Cadastros({ materiais, toast, config, onConfigChange, onChange }) {
           <MField label="Descrição"><MText value={f.desc || ""} onChange={v => set("desc", v)} placeholder="Corredor A — Expediente" /></MField>
         </>}
         {editing && editing.type === "resp" && <>
-          <MField label="Nome / posto" required hint="Ex.: 2S Geraldo, Cb Zimmerman"><MText value={f.name || ""} onChange={v => set("name", v)} placeholder="2S Nome" /></MField>
+          <MField label="Nome / posto" required hint="Ex.: 2S Geraldo, Cb Zimmermann"><MText value={f.name || ""} onChange={v => set("name", v)} placeholder="2S Nome" /></MField>
         </>}
         {editing && editing.type === "setor" && <>
           <MField label="Sigla do setor" required hint="Ex.: APP, TWR, SMST"><MText value={f.name || ""} onChange={v => set("name", v.toUpperCase())} placeholder="APP" /></MField>
