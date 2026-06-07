@@ -1,5 +1,5 @@
 /* Funções para comunicar com o backend */
-const BASE = "http://localhost:3001/api";
+const BASE = "/api";  // URL relativa — funciona em qualquer PC que acesse o servidor
 
 function getToken() {
   return localStorage.getItem("almox-token") || "";
