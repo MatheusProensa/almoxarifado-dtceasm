@@ -16,6 +16,7 @@ function getDb() {
   criarTabelas(_db);
   migrarDeJSON(_db);
   criarUsuariosIniciais(_db);
+  migrarParaContaUnica(_db);
   return _db;
 }
 
@@ -132,16 +133,25 @@ function criarUsuariosIniciais(db) {
   if (n > 0) return;
 
   const hash = bcrypt.hashSync(SENHA_PADRAO, 10);
-  const ins = db.prepare("INSERT INTO users (username, password_hash, name, role) VALUES (?,?,?,?)");
-
-  ins.run("geraldo",    hash, "2S Geraldo",    "admin");
-  ins.run("friedrich",  hash, "2S Friedrich",  "operador");
-  ins.run("zimmermann", hash, "Cb Zimmermann", "operador");
+  db.prepare("INSERT INTO users (username, password_hash, name, role) VALUES (?,?,?,?)")
+    .run("suprimento", hash, "Suprimento", "admin");
 
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("  Usuários criados. Logins: geraldo | friedrich | zimmermann");
-  console.log("  Altere a senha no primeiro acesso.");
+  console.log("  Usuário criado. Login: suprimento / Dtcea@2026");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+}
+
+// Remove contas antigas e garante que só existe a conta suprimento
+function migrarParaContaUnica(db) {
+  const temSuprimento = db.prepare("SELECT 1 FROM users WHERE username = 'suprimento'").get();
+  if (temSuprimento) return; // já migrado
+
+  const hash = bcrypt.hashSync(SENHA_PADRAO, 10);
+  db.prepare("DELETE FROM users").run();
+  db.prepare("INSERT INTO users (username, password_hash, name, role) VALUES (?,?,?,?)")
+    .run("suprimento", hash, "Suprimento", "admin");
+
+  console.log("  Contas antigas removidas. Login único: suprimento / Dtcea@2026");
 }
 
 function getJwtSecret() {

@@ -207,7 +207,7 @@ function Shell() {
 
   const submitEditMaterial = (upd) => {
     const { resp, ...dadosMaterial } = upd;
-    api.putMaterial(upd.sku, { ...dadosMaterial, resp: resp || "2S Geraldo" })
+    api.putMaterial(upd.sku, { ...dadosMaterial, resp: resp || "Suprimento" })
       .then(atualizado => {
         setMateriais(prev => prev.map(m => m.sku === upd.sku ? atualizado : m));
         api.getMovimentacoes().then(setMovs);
