@@ -927,6 +927,19 @@ function Configuracoes({ theme, onToggleTheme, toast, config, onConfigChange, se
         <Button variant="secondary" icon="BookOpen" onClick={() => setView && setView("guia")}>Abrir guia completo</Button>
       </Sec>
 
+      <Sec icon="DatabaseBackup" title="Backup dos dados" desc="Baixe uma cópia completa de todos os materiais e movimentações" color="var(--warn-500)">
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <Button variant="secondary" icon="Download" onClick={() => {
+            api.baixarBackup()
+              .then(() => toast({ title: "Backup baixado!", desc: "Guarde o arquivo em local seguro.", tone: "success" }))
+              .catch(() => toast({ title: "Erro ao gerar backup", tone: "danger" }));
+          }}>Baixar backup agora</Button>
+          <span style={{ font: "400 12.5px/1.4 var(--font-sans)", color: "var(--fg-3)" }}>
+            Salva um arquivo <b>.db</b> na pasta Downloads. Guarde-o em pendrive ou envie por e-mail.
+          </span>
+        </div>
+      </Sec>
+
       <Sec icon="Info" title="Sobre o sistema" desc="Informações e versão" color="#6B7A90">
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <img src="../../assets/dtcea-sm-logo.png" alt="" style={{ width: 40, height: 47, objectFit: "contain" }} />

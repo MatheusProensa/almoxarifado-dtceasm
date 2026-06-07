@@ -52,6 +52,24 @@ const api = {
   async getConfig()       { return req("GET",  "/config"); },
   async putConfig(dados)  { return req("PUT",  "/config", dados); },
   async putPerfil(dados)  { return req("PUT",  "/config/perfil", dados); },
+
+  async baixarBackup() {
+    const res = await fetch(BASE + "/backup/download", { headers: { "Authorization": "Bearer " + getToken() } });
+    if (!res.ok) throw new Error("Erro ao gerar backup.");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const agora = new Date();
+    const ts = agora.getFullYear() + "-" +
+      String(agora.getMonth() + 1).padStart(2, "0") + "-" +
+      String(agora.getDate()).padStart(2, "0") + "_" +
+      String(agora.getHours()).padStart(2, "0") + "-" +
+      String(agora.getMinutes()).padStart(2, "0");
+    a.href = url;
+    a.download = "almox-backup-" + ts + ".db";
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 };
 
 Object.assign(window, { api });
