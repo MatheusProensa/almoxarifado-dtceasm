@@ -268,10 +268,11 @@ function ToastProvider({ children }) {
     warn:    { color: "var(--warn-500)", icon: "AlertTriangle" },
     danger:  { color: "var(--danger-400)", icon: "CircleAlert" },
   };
+  const isMobile = useIsMobile();
   return (
     <ToastCtx.Provider value={push}>
       {children}
-      <div style={{ position: "fixed", bottom: 22, right: 22, zIndex: 1000, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ position: "fixed", bottom: isMobile ? 78 : 22, right: isMobile ? 12 : 22, left: isMobile ? 12 : "auto", zIndex: 1000, display: "flex", flexDirection: "column", gap: 10 }}>
         {toasts.map(t => {
           const tn = tone[t.tone || "success"];
           return (
@@ -291,6 +292,17 @@ function ToastProvider({ children }) {
       </div>
     </ToastCtx.Provider>
   );
+}
+
+/* ---- useIsMobile --------------------------------------------------------- */
+function useIsMobile(bp = 768) {
+  const [mobile, setMobile] = React.useState(() => window.innerWidth < bp);
+  React.useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < bp);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, [bp]);
+  return mobile;
 }
 
 /* ---- Misc ---------------------------------------------------------------- */
@@ -315,5 +327,5 @@ function getCat(cat) {
 
 Object.assign(window, {
   STATUS, MOVTYPE, statusOf, getCat, Button, IconButton, Badge, StatusPill, Card, Input,
-  Segmented, Avatar, EmptyState, ToastProvider, useToast, Divider, SectionLabel,
+  Segmented, Avatar, EmptyState, ToastProvider, useToast, Divider, SectionLabel, useIsMobile,
 });
