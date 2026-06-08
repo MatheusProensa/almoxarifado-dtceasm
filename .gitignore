@@ -7,3 +7,5 @@ dist-ssr
 # Editor
 .vscode/*
 .DS_Store
+escala-dtceasm/dist/
+escala-dtceasm/node_modules/
