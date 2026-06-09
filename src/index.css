@@ -127,7 +127,8 @@ body {
   background: var(--brand-tint);
 }
 .mobile-nav-btn span.label {
-  font: 600 10px/1 var(--font-sans);
+  font: 600 9px/1 var(--font-sans);
+  white-space: nowrap;
 }
 .mobile-nav-badge {
   position: absolute;
