@@ -203,7 +203,7 @@ function Dashboard({ materiais, alertas, movs, statsKpis, openModal, setView, to
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+      <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         {metrics.map(m => <MetricCard key={m.key} m={m} onLink={() => setView(m.link.view, m.link.filter)} />)}
       </div>
 
@@ -219,15 +219,15 @@ function Dashboard({ materiais, alertas, movs, statsKpis, openModal, setView, to
       </Card>
 
       {/* duas colunas */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.42fr 1fr", gap: 16, alignItems: "start" }}>
+      <div className="dash-cols" style={{ display: "grid", gridTemplateColumns: "1.42fr 1fr", gap: 16, alignItems: "start" }}>
         {/* esquerda */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <LowStockTable rows={alertas.slice(0, 6)} onAll={() => setView("alertas")} />
           <LastMov movs={movs} onAll={() => setView("movimentacao")} />
         </div>
 
-        {/* direita */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* direita — escondido no mobile via .dash-charts */}
+        <div className="dash-charts" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <Card pad={20}>
             <CardHead title="Movimentações" subtitle="Entradas e saídas — últimos 6 meses"
               action={<div style={{ display: "flex", gap: 14 }}><Legend dot="var(--ok-500)" label="Entradas" /><Legend dot="var(--warn-500)" label="Saídas" /></div>} />

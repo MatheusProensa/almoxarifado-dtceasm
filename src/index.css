@@ -71,6 +71,18 @@ body {
 
   /* Formulários: grade de 2 colunas vira 1 coluna */
   .mobile-col1 { grid-template-columns: 1fr !important; }
+
+  /* Dashboard: KPIs 2 colunas no mobile */
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Dashboard: layout 2 colunas vira 1 coluna */
+  .dash-cols { grid-template-columns: 1fr !important; }
+
+  /* Dashboard: esconde gráficos no mobile (mostram vazio sem dados) */
+  .dash-charts { display: none !important; }
+
+  /* Modals: campos lado a lado viram 1 coluna */
+  .form-grid { grid-template-columns: 1fr !important; }
 }
 
 /* Navegação inferior (mobile) */

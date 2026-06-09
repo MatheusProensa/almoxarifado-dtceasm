@@ -181,14 +181,14 @@ function MovementModal({ open, tipo, materiais, onClose, onSubmit, initialSku = 
           <span style={{ font: "500 12px/1.4 var(--font-sans)", color: "var(--danger-500)" }}>Quantidade maior que o saldo disponível (<b>{mat.qty} {mat.unit}</b>).</span>
         </div>
       )}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+      <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
         <MField label={isIn ? "Quantidade recebida" : "Quantidade retirada"} required><MText value={qty} onChange={setQty} placeholder="0" type="number" /></MField>
         <MField label="Data" required>
           <input type="date" value={data} max={HOJE} onChange={e => setData(e.target.value)}
             style={{ height: 40, padding: "0 12px", width: "100%", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", color: "var(--fg-1)", font: "500 13.5px/1 var(--font-sans)", outline: "none", colorScheme: "light" }} />
         </MField>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+      <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
         {isIn
           ? <MField label="Responsável" required><MSelect value={resp} placeholder="Selecione" onChange={setResp} options={RESPONSAVEIS.map(r => ({ value: r.name, label: r.name }))} /></MField>
           : <MField label="Militar (quem retirou)" required><MText value={resp} onChange={setResp} placeholder="Nome do militar" /></MField>}
@@ -223,13 +223,13 @@ function AddMaterialModal({ open, onClose, onSubmit }) {
           onClick={() => onSubmit({ ...f, qty, min })}>Salvar material</Button>
       </>}>
       <MField label="Nome do material" required hint="Nomenclatura conforme a GFM (Guia de Fornecimento de Material)"><MText value={f.name} onChange={v => set("name", v)} placeholder="Ex.: Cabo coaxial RG-213/U" /></MField>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+      <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
         <MField label="Categoria" required>
           <MSelect value={f.cat} placeholder="Selecione" onChange={v => set("cat", v)} options={Object.entries(CATEGORIAS).map(([k, c]) => ({ value: k, label: c.label }))} />
         </MField>
         <MField label="Unidade de medida"><MSelect value={f.unit} placeholder="un" onChange={v => set("unit", v)} options={UNIDADES.map(u => ({ value: u, label: u }))} /></MField>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+      <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
         <MField label="Quantidade inicial"><MText value={f.qty} onChange={v => set("qty", v)} placeholder="0" type="number" /></MField>
         <MField label="Estoque mínimo" required><MText value={f.min} onChange={v => set("min", v)} placeholder="0" type="number" /></MField>
       </div>
@@ -267,13 +267,13 @@ function EditMaterialModal({ open, material, onClose, onSubmit }) {
           onClick={() => onSubmit({ ...material, name: f.name, cat: f.cat, unit: f.unit, loc: f.loc || "—", qty: parseInt(f.qty, 10) || 0, min: parseInt(f.min, 10) || 0, obs: f.obs, resp: f.resp })}>Salvar alterações</Button>
       </>}>
       <MField label="Nomenclatura do material" required><MText value={f.name} onChange={v => set("name", v)} placeholder="Nome do material" /></MField>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+      <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
         <MField label="Categoria" required>
           <MSelect value={f.cat} placeholder="Selecione" onChange={v => set("cat", v)} options={Object.entries(CATEGORIAS).map(([k, c]) => ({ value: k, label: c.label }))} />
         </MField>
         <MField label="Unidade de medida"><MSelect value={f.unit} placeholder="un" onChange={v => set("unit", v)} options={UNIDADES.map(u => ({ value: u, label: u }))} /></MField>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+      <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
         <MField label="Estoque atual" hint={qtyChanged ? "Gera um ajuste no histórico" : null}><MText value={f.qty} onChange={v => set("qty", v)} placeholder="0" type="number" /></MField>
         <MField label="Estoque mínimo" required><MText value={f.min} onChange={v => set("min", v)} placeholder="0" type="number" /></MField>
       </div>
@@ -317,7 +317,7 @@ function UpdateQtyModal({ open, materiais, onClose, onSubmit, initialSku = "" })
         <MaterialPicker materiais={materiais} value={sku} onChange={setSku} />
       </MField>
       {mat && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+        <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
           <div style={{ padding: "11px 13px", background: "var(--bg-inset)", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)" }}>
             <div style={{ font: "600 10px/1 var(--font-sans)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 }}>Saldo atual</div>
             <div style={{ font: "700 18px/1 var(--font-sans)", color: "var(--fg-1)" }}>{mat.qty} <span style={{ font: "500 12px/1 var(--font-sans)", color: "var(--fg-3)" }}>{mat.unit}</span></div>
@@ -357,7 +357,7 @@ function BulkOutModal({ open, materiais, ids, onClose, onSubmit }) {
         <Button variant="ghost" onClick={onClose}>Cancelar</Button>
         <Button variant="gold" icon="ArrowUpFromLine" disabled={!ready} onClick={() => onSubmit({ items, qtds, resp, dest })}>Confirmar saídas</Button>
       </>}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
+      <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
         <MField label="Militar (quem retirou)" required><MText value={resp} onChange={setResp} placeholder="Nome do militar" /></MField>
         <MField label="Destino / setor" required>
           <MSelect value={dest} placeholder="Selecione o setor" onChange={setDest} options={SETORES.map(s => ({ value: s, label: s }))} />
