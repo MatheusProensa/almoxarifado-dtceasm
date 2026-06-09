@@ -98,7 +98,7 @@ function Sidebar({ view, setView, collapsed, setCollapsed, counts }) {
         {!collapsed && (
           <div style={{ paddingTop: 4, textAlign: "center", font: "500 9.5px/1.5 var(--font-sans)", color: "var(--fg-4)" }}>
             Desenvolvido por <span style={{ color: "var(--fg-3)", fontWeight: 600 }}>Matheus Proensa</span><br />
-            Cb Proensa · ex-DTCEA-SM
+            Ex Cb Proensa · DTCEA-SM
           </div>
         )}
       </div>
