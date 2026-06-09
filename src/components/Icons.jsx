@@ -30,7 +30,7 @@ function BrandMark({ collapsed = false }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
       <div style={{
-        width: 34, height: 40, flexShrink: 0, position: "relative",
+        width: 44, height: 52, flexShrink: 0, position: "relative",
         display: "grid", placeItems: "center",
         filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.5))",
       }}>
