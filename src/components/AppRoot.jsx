@@ -78,6 +78,7 @@ function Shell() {
   const [theme, setTheme] = React.useState(() => localStorage.getItem("almox-theme") || "light");
   const [view, setViewRaw] = React.useState("dashboard");
   const [collapsed, setCollapsed] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [paletteOpen, setPaletteOpen] = React.useState(false);
   const [modal, setModal] = React.useState(null);
   const [preset, setPreset] = React.useState("");
@@ -272,38 +273,15 @@ function Shell() {
     </div>
   );
 
-  const totalAlertas = counts.baixa + counts.crit;
-
-  const MobileNav = () => {
-    const btn = (icon, label, v, badge) => (
-      <button className={"mobile-nav-btn" + (view === v ? " active" : "")} onClick={() => setView(v)}>
-        {badge > 0 && <span className="mobile-nav-badge">{badge > 9 ? "9+" : badge}</span>}
-        <Icon name={icon} size={22} stroke={view === v ? 2.2 : 1.8} />
-        <span className="label">{label}</span>
-      </button>
-    );
-    return (
-      <nav className="mobile-nav" aria-label="Navegação principal">
-        <div className="mobile-nav-inner">
-          {btn("ArrowDownToLine", "Entrada",  "entradas")}
-          {btn("ArrowUpFromLine", "Saída",    "saidas")}
-          {btn("Boxes",           "Materiais","materiais")}
-          {btn("TriangleAlert",   "Alertas",  "alertas", totalAlertas)}
-          {btn("LayoutDashboard", "Início",   "dashboard")}
-        </div>
-      </nav>
-    );
-  };
-
   return (
     <div className="app-shell" style={{ display: "flex", height: "100%", position: "relative" }}>
-      <Sidebar view={view} setView={setView} collapsed={collapsed} setCollapsed={setCollapsed} counts={counts} />
+      <Sidebar view={view} setView={setView} collapsed={collapsed} setCollapsed={setCollapsed} counts={counts} drawerOpen={drawerOpen} onDrawerClose={() => setDrawerOpen(false)} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, position: "relative", zIndex: 1 }}>
         <Topbar theme={theme} onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")}
           onSearch={() => setPaletteOpen(true)} alertas={alertas} movs={movs}
           onOpenAlertas={() => setView("alertas")} onOpenHistorico={() => setView("movimentacao")}
           onOpenGuia={() => setView("guia")} onOpenProfile={() => setProfileOpen(true)} toast={toast}
-          perfil={config && config.perfil} />
+          perfil={config && config.perfil} onMenuOpen={() => setDrawerOpen(true)} />
         <main ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 26px 44px" }}>
           <div style={{ maxWidth: 1340, margin: "0 auto" }}>
             {view === "dashboard" && <Dashboard materiais={materiais} alertas={alertas} movs={movs} statsKpis={statsKpis} openModal={openModal} setView={setView} toast={toast} />}
@@ -319,8 +297,6 @@ function Shell() {
           </div>
         </main>
       </div>
-
-      <MobileNav />
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} materiais={materiais} setView={setView} onMatSelect={q => setMatInitialQ(q)} />
       <MovementModal open={modal === "in" || modal === "out"} tipo={modal} materiais={materiais} initialSku={preset} onClose={() => setModal(null)} onSubmit={submitMovement} />

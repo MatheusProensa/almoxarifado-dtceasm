@@ -46,14 +46,21 @@ body {
 
 /* ─── Responsivo / Mobile ───────────────────────────────────────────────── */
 
+/* Impede scroll horizontal na página inteira */
+body { overflow-x: hidden; }
+.app-shell { overflow-x: hidden; }
+
+/* Hamburger: oculto no desktop, visível no mobile */
+.topbar-hamburger { display: none !important; }
+
 /* Remove zoom no mobile (1.09 só faz sentido em desktop) */
 @media (max-width: 768px) {
   .app-shell main,
   .app-shell header,
   .app-shell aside { zoom: 1; }
 
-  /* Sidebar some no mobile */
-  .app-shell aside { display: none !important; }
+  /* Sidebar desktop some no mobile (drawer cuida da navegação) */
+  .sidebar-desktop { display: none !important; }
 
   /* Main ocupa tudo */
   .app-shell { display: flex; flex-direction: column; }
@@ -61,13 +68,21 @@ body {
   /* Header mais compacto */
   .app-shell header {
     height: 54px !important;
-    padding: 0 14px !important;
+    padding: 0 10px !important;
   }
 
-  /* Main com padding inferior para a nav de baixo */
+  /* Main sem padding extra de nav inferior */
   .app-shell main {
-    padding: 16px 14px 88px !important;
+    padding: 16px 14px 28px !important;
   }
+
+  /* Topbar: mostra hamburger */
+  .topbar-hamburger { display: flex !important; }
+
+  /* Topbar: oculta busca, label do tema, nome do perfil */
+  .topbar-search { display: none !important; }
+  .topbar-theme-label { display: none !important; }
+  .topbar-profile-name { display: none !important; }
 
   /* Formulários: grade de 2 colunas vira 1 coluna */
   .mobile-col1 { grid-template-columns: 1fr !important; }
@@ -85,67 +100,8 @@ body {
   .form-grid { grid-template-columns: 1fr !important; }
 }
 
-/* Navegação inferior (mobile) */
-.mobile-nav {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: 64px;
-  background: var(--bg-2);
-  border-top: 1px solid var(--line-2);
-  z-index: 200;
-  padding: 0 4px;
-  padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: 0 -4px 20px rgba(0,0,0,.08);
-}
-.mobile-nav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  height: 64px;
-}
-.mobile-nav-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  flex: 1;
-  height: 100%;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--fg-3);
-  -webkit-tap-highlight-color: transparent;
-  border-radius: var(--r-sm);
-  padding: 6px 4px;
-  transition: color var(--dur-fast), background var(--dur-fast);
-  position: relative;
-}
-.mobile-nav-btn.active {
-  color: var(--brand-600);
-  background: var(--brand-tint);
-}
-.mobile-nav-btn span.label {
-  font: 600 9px/1 var(--font-sans);
-  white-space: nowrap;
-}
-.mobile-nav-badge {
-  position: absolute;
-  top: 6px; right: calc(50% - 16px);
-  min-width: 16px; height: 16px;
-  border-radius: 999px;
-  background: var(--danger-500);
-  color: #fff;
-  font: 700 10px/16px var(--font-sans);
-  text-align: center;
-  padding: 0 4px;
-  border: 2px solid var(--bg-2);
-}
-
-@media (max-width: 768px) {
-  .mobile-nav { display: flex; flex-direction: column; }
-}
+/* Animação do drawer lateral */
+@keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: none; } }
 
 /* Tela de entrada/saída — painel do material selecionado */
 @media (max-width: 640px) {

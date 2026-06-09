@@ -19,7 +19,7 @@ function ThemeToggle({ theme, onToggle }) {
           <Icon name="Sun" size={15} stroke={2.1} />
         </span>
       </span>
-      <span style={{ font: "600 12.5px/1 var(--font-sans)", color: "var(--fg-1)" }}>{dark ? "Escuro" : "Claro"}</span>
+      <span className="topbar-theme-label" style={{ font: "600 12.5px/1 var(--font-sans)", color: "var(--fg-1)" }}>{dark ? "Escuro" : "Claro"}</span>
     </button>
   );
 }
@@ -124,11 +124,11 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile, p
         onMouseEnter={e => { if (!open) e.currentTarget.style.background = "var(--bg-3)"; }}
         onMouseLeave={e => { if (!open) e.currentTarget.style.background = "transparent"; }}>
         <Avatar name={P.name} size={32} />
-        <div style={{ textAlign: "left", lineHeight: 1.2, paddingRight: 2 }}>
+        <div className="topbar-profile-name" style={{ textAlign: "left", lineHeight: 1.2, paddingRight: 2 }}>
           <div style={{ font: "600 12.5px/1 var(--font-sans)", color: "var(--fg-1)", whiteSpace: "nowrap" }}>{P.name}</div>
           <div style={{ font: "500 10.5px/1 var(--font-sans)", color: "var(--fg-3)", marginTop: 3, whiteSpace: "nowrap", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis" }}>{P.role}</div>
         </div>
-        <Icon name="ChevronDown" size={15} style={{ color: "var(--fg-3)" }} />
+        <Icon name="ChevronDown" size={15} className="topbar-profile-name" style={{ color: "var(--fg-3)" }} />
       </button>
       {open && (
         <div style={{ position: "absolute", right: 0, top: 48, zIndex: 40, width: 248, background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", boxShadow: "var(--shadow-pop)", overflow: "hidden", animation: "popIn var(--dur-fast) var(--ease-out) both" }}>
@@ -157,15 +157,21 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile, p
   );
 }
 
-function Topbar({ theme, onToggleTheme, onSearch, alertas, movs, onOpenAlertas, onOpenHistorico, onOpenGuia, onOpenProfile, toast, perfil }) {
+function Topbar({ theme, onToggleTheme, onSearch, alertas, movs, onOpenAlertas, onOpenHistorico, onOpenGuia, onOpenProfile, toast, perfil, onMenuOpen }) {
   return (
     <header style={{
       position: "relative", zIndex: 3, height: "var(--topbar-h)", flexShrink: 0,
-      display: "flex", alignItems: "center", gap: 16, padding: "0 22px",
+      display: "flex", alignItems: "center", gap: 10, padding: "0 14px",
       background: "var(--bg-1)", borderBottom: "1px solid var(--line-1)",
     }}>
+      {/* hamburger (só mobile) */}
+      <button className="topbar-hamburger" onClick={onMenuOpen}
+        style={{ width: 36, height: 36, border: "none", background: "transparent", color: "var(--fg-1)", cursor: "pointer", alignItems: "center", justifyContent: "center", borderRadius: "var(--r-sm)", flexShrink: 0, padding: 0 }}>
+        <Icon name="Menu" size={20} />
+      </button>
+
       {/* busca */}
-      <div onClick={onSearch} style={{ width: 400, maxWidth: "42vw", cursor: "text" }}>
+      <div className="topbar-search" onClick={onSearch} style={{ width: 400, maxWidth: "42vw", cursor: "text" }}>
         <Input icon="Search" placeholder="Buscar material ou localização…" full
           onChange={() => {}} value="" style={{ pointerEvents: "none", background: "var(--bg-3)", borderColor: "var(--line-1)" }} />
       </div>
@@ -173,7 +179,7 @@ function Topbar({ theme, onToggleTheme, onSearch, alertas, movs, onOpenAlertas, 
       <div style={{ flex: 1 }} />
 
       {/* ações */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         <Notifications alertas={alertas} movs={movs} onOpenAlertas={onOpenAlertas} onOpenHistorico={onOpenHistorico} />
         <Divider vertical style={{ height: 26, margin: "0 2px" }} />
