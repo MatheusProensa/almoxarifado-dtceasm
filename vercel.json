@@ -4,6 +4,5 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
-  ],
-  "ignoreCommand": "exit 1"
+  ]
 }

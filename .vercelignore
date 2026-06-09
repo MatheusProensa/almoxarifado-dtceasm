@@ -1,0 +1,6 @@
+backend/
+backups/
+*.bat
+*.vbs
+*.exe
+segundo-pc/
