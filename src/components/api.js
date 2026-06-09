@@ -1,4 +1,4 @@
-/* Comunicação com Supabase — substitui o Express backend */
+/* Camada de comunicação com o Supabase */
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
