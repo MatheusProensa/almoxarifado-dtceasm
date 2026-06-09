@@ -57,10 +57,10 @@ function ErroConexao() {
     <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "var(--bg-1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ textAlign: "center", maxWidth: 420, padding: 32 }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
-        <div style={{ font: "700 20px/1.3 var(--font-sans)", color: "var(--fg-1)", marginBottom: 12 }}>Servidor não encontrado</div>
+        <div style={{ font: "700 20px/1.3 var(--font-sans)", color: "var(--fg-1)", marginBottom: 12 }}>Erro ao carregar dados</div>
         <div style={{ font: "400 14px/1.6 var(--font-sans)", color: "var(--fg-3)", marginBottom: 24 }}>
-          O servidor backend não está rodando.<br />
-          Abra o arquivo <strong>Almox Proensa.exe</strong> na pasta do projeto e aguarde.
+          Não foi possível conectar ao banco de dados.<br />
+          Verifique sua conexão com a internet.
         </div>
         <button onClick={() => window.location.reload()}
           style={{ padding: "10px 24px", borderRadius: "var(--r-sm)", border: "none", background: "var(--brand-600)", color: "#fff", font: "600 14px var(--font-sans)", cursor: "pointer" }}>
@@ -73,7 +73,8 @@ function ErroConexao() {
 
 function Shell() {
   const toast = useToast();
-  const [autenticado, setAutenticado] = React.useState(() => !!localStorage.getItem("almox-token"));
+  const [autenticado, setAutenticado] = React.useState(false);
+  const [checkingAuth, setCheckingAuth] = React.useState(true);
   const [theme, setTheme] = React.useState(() => localStorage.getItem("almox-theme") || "light");
   const [view, setViewRaw] = React.useState("dashboard");
   const [collapsed, setCollapsed] = React.useState(false);
@@ -96,11 +97,15 @@ function Shell() {
   const [histFilter, setHistFilter] = React.useState("all");
   const scrollRef = React.useRef(null);
 
-  // Ouvir evento de logout (token expirado / 401)
+  // Verificar sessão Supabase ao iniciar e ouvir mudanças de auth
   React.useEffect(() => {
-    const onLogout = () => setAutenticado(false);
-    window.addEventListener("almox-logout", onLogout);
-    return () => window.removeEventListener("almox-logout", onLogout);
+    api.getSession().then(session => {
+      setAutenticado(!!session);
+      setCheckingAuth(false);
+    });
+    return api.onAuthChange((_event, session) => {
+      setAutenticado(!!session);
+    });
   }, []);
 
   // Carregar dados do backend ao iniciar
@@ -112,12 +117,12 @@ function Shell() {
         setMovs(movimentos);
         setStatsKpis(stats);
         setConfig(cfg);
-        // Atualiza globals usados pelos componentes
-        window.CATEGORIAS = cfg.categorias;
-        window.UNIDADES = cfg.unidades;
-        window.PROFILE = cfg.perfil;
-        window.RESPONSAVEIS = cfg.responsaveis;
-        window.SETORES = cfg.setores || window.SETORES;
+        // Atualiza globals — só sobrescreve se o config tiver o valor (senão mantém o padrão do data.jsx)
+        if (cfg.categorias)   window.CATEGORIAS   = cfg.categorias;
+        if (cfg.unidades)     window.UNIDADES     = cfg.unidades;
+        if (cfg.perfil)       window.PROFILE      = cfg.perfil;
+        if (cfg.responsaveis) window.RESPONSAVEIS = cfg.responsaveis;
+        if (cfg.setores)      window.SETORES      = cfg.setores;
         setCarregando(false);
       })
       .catch(() => {
@@ -128,11 +133,11 @@ function Shell() {
 
   const updateConfig = React.useCallback((novoConfig) => {
     setConfig(novoConfig);
-    window.CATEGORIAS = novoConfig.categorias;
-    window.UNIDADES = novoConfig.unidades;
-    window.PROFILE = novoConfig.perfil;
-    window.RESPONSAVEIS = novoConfig.responsaveis;
-    if (novoConfig.setores) window.SETORES = novoConfig.setores;
+    if (novoConfig.categorias)   window.CATEGORIAS   = novoConfig.categorias;
+    if (novoConfig.unidades)     window.UNIDADES     = novoConfig.unidades;
+    if (novoConfig.perfil)       window.PROFILE      = novoConfig.perfil;
+    if (novoConfig.responsaveis) window.RESPONSAVEIS = novoConfig.responsaveis;
+    if (novoConfig.setores)      window.SETORES      = novoConfig.setores;
     api.putConfig(novoConfig).catch(() => {});
   }, []);
 
@@ -254,6 +259,7 @@ function Shell() {
     }).catch(() => toast({ title: "Erro ao registrar", desc: "Verifique a conexão com o servidor.", tone: "danger" }));
   };
 
+  if (checkingAuth) return null;
   if (!autenticado) return <Login onLogin={() => setAutenticado(true)} />;
 
   if (erroConexao) return <ErroConexao />;

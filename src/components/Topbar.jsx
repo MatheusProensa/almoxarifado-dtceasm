@@ -148,11 +148,7 @@ function ProfileMenu({ theme, onToggleTheme, toast, onOpenGuia, onOpenProfile, p
             {item("LogOut", "Sair", () => {
               setOpen(false);
               toast({ title: "Saindo…", desc: `Até logo, ${P.name}`, tone: "info" });
-              setTimeout(() => {
-                localStorage.removeItem("almox-token");
-                localStorage.removeItem("almox-user");
-                window.location.reload();
-              }, 900);
+              setTimeout(() => api.logout(), 900);
             }, true)}
           </div>
         </div>
