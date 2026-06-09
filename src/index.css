@@ -48,7 +48,6 @@ body {
 
 /* Impede scroll horizontal na página inteira */
 body { overflow-x: hidden; }
-.app-shell { overflow-x: hidden; }
 
 /* Hamburger: oculto no desktop, visível no mobile */
 .topbar-hamburger { display: none !important; }
@@ -71,9 +70,9 @@ body { overflow-x: hidden; }
     padding: 0 10px !important;
   }
 
-  /* Main sem padding extra de nav inferior */
+  /* Main com folga suficiente embaixo para botões não encostarem na borda */
   .app-shell main {
-    padding: 16px 14px 28px !important;
+    padding: 16px 14px 64px !important;
   }
 
   /* Topbar: mostra hamburger */

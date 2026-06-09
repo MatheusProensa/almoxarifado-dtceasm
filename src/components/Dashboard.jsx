@@ -100,7 +100,8 @@ function LastMov({ movs, onAll }) {
       <div style={{ padding: "18px 20px 10px" }}>
         <CardHead title="Últimas movimentações" action={<LinkBtn onClick={onAll}>Ver todas</LinkBtn>} />
       </div>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <table style={{ width: "100%", minWidth: 480, borderCollapse: "collapse" }}>
         <thead>
           <tr>
             <ThD style={{ paddingLeft: 20 }}>Tipo</ThD><ThD>Material</ThD>
@@ -124,6 +125,7 @@ function LastMov({ movs, onAll }) {
           })}
         </tbody>
       </table>
+      </div>
     </Card>
   );
 }
