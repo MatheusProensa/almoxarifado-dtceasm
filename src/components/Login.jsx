@@ -17,9 +17,7 @@ function Login({ onLogin }) {
     setErro("");
     setCarregando(true);
     api.login(username.trim(), senha)
-      .then(({ token, user }) => {
-        localStorage.setItem("almox-token", token);
-        localStorage.setItem("almox-user", JSON.stringify(user));
+      .then(({ user }) => {
         onLogin(user);
       })
       .catch(err => {

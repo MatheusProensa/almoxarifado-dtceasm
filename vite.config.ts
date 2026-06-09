@@ -12,10 +12,7 @@ export default defineConfig({
     jsxInject: `const React = (window).React`,
   },
   server: {
-    host: true, // aceita conexões de outros PCs na rede (modo dev)
-    proxy: {
-      "/api": "http://localhost:3001", // redireciona /api para o backend
-    },
+    host: true,
   },
   plugins: [
     VitePWA({
@@ -79,8 +76,8 @@ export default defineConfig({
             },
           },
           {
-            // API local — sempre tenta a rede primeiro, sem fallback offline
-            urlPattern: /localhost:3001\/api/,
+            // Supabase — sempre tenta a rede primeiro, sem fallback offline
+            urlPattern: /supabase\.co/,
             handler: "NetworkOnly",
           },
         ],
