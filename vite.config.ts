@@ -75,11 +75,6 @@ export default defineConfig({
               expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
-          {
-            // Supabase — sempre tenta a rede primeiro, sem fallback offline
-            urlPattern: /supabase\.co/,
-            handler: "NetworkOnly",
-          },
         ],
       },
     }),
