@@ -176,6 +176,17 @@ function Topbar({ theme, onToggleTheme, onSearch, alertas, movs, onOpenAlertas, 
           onChange={() => {}} value="" style={{ pointerEvents: "none", background: "var(--bg-3)", borderColor: "var(--line-1)" }} />
       </div>
 
+      {window.DEMO_MODE && (
+        <span title="Dados locais neste navegador — não sincronizados com outros dispositivos" style={{
+          display: "flex", alignItems: "center", gap: 6, height: 30, padding: "0 11px",
+          borderRadius: "var(--r-pill)", background: "var(--gold-tint)", color: "var(--gold-500)",
+          font: "700 11.5px/1 var(--font-sans)", letterSpacing: "0.02em", flexShrink: 0,
+        }}>
+          <Icon name="FlaskConical" size={14} stroke={2.2} />
+          Modo demonstração
+        </span>
+      )}
+
       <div style={{ flex: 1 }} />
 
       {/* ações */}
